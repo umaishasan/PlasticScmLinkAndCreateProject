@@ -15,7 +15,13 @@ For Making Repo in PlasticSCM:
 6) cm add .
 7) cm checkin -m "Initial commit"
 
-
+For Checking is downloaded:
+=====================
+1) cm workspace list
+2) cm workspace list | findstr DTH_Content_Workflow
+3) cm find changeset "where branch='main'" --format="{changesetid}"
+4) type ".plastic\plastic.selector"
+5) cm switch main
 
 Just Example Path:
 plastic://LocLab_Consulting_GmbH.cloud/repos/DTH_Amcor_Werkhallen
