@@ -1,0 +1,21 @@
+For Release Build:
+=============
+dotnet publish -c Release -r win-x64 --self-contained true
+
+For Making Repo in PlasticSCM:
+=======================
+1) cm mkrep DTH_Abc@LocLab_Consulting_GmbH@cloud
+
+2) cm mkworkspace DTH_Abc_ws D:\@TLL_PlasticProjects\DTH\NewFolder DTH_Abc@LocLab_Consulting_GmbH@cloud
+     "Workspace DTH_Abc_ws has been correctly created"
+    Note:  where new folder created (.plastic) show in new folder that means new folder should be name project name.
+3) C:\>d:
+4) D:\@TLL_PlasticProjects> cd DTH\NewFolder
+5) echo # DTH Project > README.md
+6) cm add .
+7) cm checkin -m "Initial commit"
+
+
+
+Just Example Path:
+plastic://LocLab_Consulting_GmbH.cloud/repos/DTH_Amcor_Werkhallen
