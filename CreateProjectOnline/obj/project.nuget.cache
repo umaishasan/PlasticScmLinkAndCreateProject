@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ccUp7oR6FqI=",
+  "dgSpecHash": "p0D9hPcHaa4=",
   "success": true,
-  "projectFilePath": "D:\\@TLL_UDrive_Projects\\WPF\\CreateProjectOnline\\CreateProjectOnline\\CreateProjectOnline.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\Umais Hasan\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\8.0.12\\microsoft.netcore.app.runtime.win-x64.8.0.12.nupkg.sha512",
-    "C:\\Users\\Umais Hasan\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\8.0.12\\microsoft.windowsdesktop.app.runtime.win-x64.8.0.12.nupkg.sha512",
-    "C:\\Users\\Umais Hasan\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\8.0.12\\microsoft.aspnetcore.app.runtime.win-x64.8.0.12.nupkg.sha512"
-  ],
+  "projectFilePath": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\CreateProjectOnline.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

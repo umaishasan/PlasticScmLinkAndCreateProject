@@ -1,8 +1,7 @@
 {
   "version": 3,
   "targets": {
-    "net8.0-windows7.0": {},
-    "net8.0-windows7.0/win-x64": {}
+    "net8.0-windows7.0": {}
   },
   "libraries": {},
   "projectFileDependencyGroups": {
@@ -15,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\@TLL_UDrive_Projects\\WPF\\CreateProjectOnline\\CreateProjectOnline\\CreateProjectOnline.csproj",
+      "projectUniqueName": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\CreateProjectOnline.csproj",
       "projectName": "CreateProjectOnline",
-      "projectPath": "D:\\@TLL_UDrive_Projects\\WPF\\CreateProjectOnline\\CreateProjectOnline\\CreateProjectOnline.csproj",
+      "projectPath": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\CreateProjectOnline.csproj",
       "packagesPath": "C:\\Users\\Umais Hasan\\.nuget\\packages\\",
-      "outputPath": "D:\\@TLL_UDrive_Projects\\WPF\\CreateProjectOnline\\CreateProjectOnline\\obj\\",
+      "outputPath": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -68,20 +67,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-            "version": "[8.0.12, 8.0.12]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Runtime.win-x64",
-            "version": "[8.0.12, 8.0.12]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-            "version": "[8.0.12, 8.0.12]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
@@ -91,11 +76,6 @@
           }
         },
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
-      }
-    },
-    "runtimes": {
-      "win-x64": {
-        "#import": []
       }
     }
   }
