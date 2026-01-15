@@ -11,6 +11,7 @@ namespace CreateProjectOnline
     public class Controller
     {
         public string server = "@cloud";
+        public string fullServerName;
         public string selectOrganization;
         public string projectName;
         public string projectLocation;
@@ -19,6 +20,7 @@ namespace CreateProjectOnline
         private string contentWorkflowProject;
         private string contentWorkflowProjectPath;
         private int contentWorkflowCurrentChangeset;
+        private int contentWorkflowMainLatest;
 
         public Controller(string selectOrganization, string projectName,string projectLocation)
         {
@@ -27,29 +29,16 @@ namespace CreateProjectOnline
             this.projectLocation = projectLocation;
         }
 
-        public void CreateProjectOnline()
+        public async void CreateProjectOnline()
         {
-
-
-            // string repoName = "MyAutoRepo";
-            /*string serverName = selectOrganization + this.server; // or your server name
-            Debug.WriteLine($"Starting Plastic SCM Automation...{serverName}");
-
-            RunCmd($"cm mkrep {projectName}@{serverName}");
-            RunCmd($"cm mkws {projectName}_ws {projectLocation} --repository={projectName}@{serverName}");
-            // Create default project files
-            File.WriteAllText(Path.Combine(projectLocation, "README.md"), "# Default Project");
-            RunCmd($"cm add \"{projectLocation}\"");
-            RunCmd($"cm checkin -m \"Initial commit\" \"{projectLocation}\"");
-
-            Debug.WriteLine("Automation completed successfully!");*/
-            /*Console.ReadKey();
-            Console.ReadKey();*/
-
-            ///-------------------------------------------------
             CheckContentWorkflowDownloaded();
             CheckContentWorkflowChangeset();
             ContentWorkflowChangesetMatchToMainChangeset();
+            CreateNewRepository();
+            await CopyingAllFilesInNewRepository(contentWorkflowProjectPath, projectLocation);
+            Debug.WriteLine("Copying files and folder successfully");
+            await AddAndCheckinFilesInNewRepository();
+            Debug.WriteLine("Add and Checkin files successfully");
         }
 
         private void CheckContentWorkflowDownloaded()
@@ -78,21 +67,103 @@ namespace CreateProjectOnline
             var directoryFound = contentWorkflowProjectPath.Split(':');
             RunCmd($"{directoryFound}:");
             RunCmd($"cd \"{contentWorkflowProjectPath}\"");
-
-            var tempFile = Path.Combine(Path.GetTempPath(), "plastic_selector.txt");
-            RunCmdWithOutput($"type .plastic\\plastic.selector > \"{tempFile}\"", contentWorkflowProjectPath);
-            var output = RunCmdWithOutput($"type \"{tempFile}\"");
-            Debug.WriteLine(output);
-
-            var outputSplited = output.Split("/");
-            var getNumber = outputSplited.LastOrDefault().Split('\"');
-            contentWorkflowCurrentChangeset = int.Parse(getNumber[2]);
-            Debug.WriteLine("Get the number: "+ contentWorkflowCurrentChangeset);
+            var output = RunCmdWithOutput($"cm status --header", contentWorkflowProjectPath);
+            var outputSplited = output.Split("@");
+            if (outputSplited.FirstOrDefault() == "/main")
+            {
+                Debug.WriteLine("Already in main branch: "+ output);
+                return;
+            }
+            else
+            {
+                var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                contentWorkflowCurrentChangeset = int.Parse(lastOutput[1]);
+                Debug.WriteLine("Get the number: "+ contentWorkflowCurrentChangeset);
+            }
         }
 
         private void ContentWorkflowChangesetMatchToMainChangeset()
         {
-            
+            var changesetNo = GetMainBranchChangeset();
+            var lastChangesetNo = changesetNo.LastOrDefault();
+            contentWorkflowMainLatest = int.Parse(lastChangesetNo.ToString());
+            if(contentWorkflowCurrentChangeset != contentWorkflowMainLatest)
+            {
+                Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
+                
+                ///undo all changes
+                RunCmdWithOutput("cm undo --all && cm clean", contentWorkflowProjectPath);
+                RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                Debug.WriteLine($"Undo all changes: ");
+
+                ///Try to switch in main latest
+                var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
+                var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                
+                Debug.WriteLine($"Switch output: {switchOutput}");
+                //Debug.WriteLine($"Status output: {statusOutput}");
+                Debug.WriteLine("Switch to main latest successfully");
+            }
+            else
+            {
+                Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
+                return;
+            }
+        }
+
+        private void CreateNewRepository()
+        {
+            var removeSpace = selectOrganization.Replace(" ", "");
+            fullServerName = removeSpace + this.server;
+
+            ///Create new repository
+            RunCmd($"cm mkrep {projectName}@{fullServerName}");
+            Debug.WriteLine("Create Repository successfully");
+        }
+
+        private async Task CopyingAllFilesInNewRepository(string sourceDir, string targetDir)
+        {
+            if (Path.GetFileName(sourceDir).Equals(".plastic", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (!Directory.Exists(targetDir))
+            {
+                Directory.CreateDirectory(targetDir);
+            }
+
+            var files = Directory.GetFiles(sourceDir);
+            Parallel.ForEach(files, file =>
+            {
+                var fileName = Path.GetFileName(file);
+                if (fileName.StartsWith(".plastic", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.StartsWith("plastic.selector", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.StartsWith("plastic.wktree", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.StartsWith("plastic.workspace", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                var destFile = Path.Combine(targetDir, fileName);
+                File.Copy(file, destFile, true);
+            });
+
+            var directories = Directory.GetDirectories(sourceDir);
+            Parallel.ForEach(directories, async directory =>
+            {
+                if (Path.GetFileName(directory).Equals(".plastic", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                var dirName = Path.GetFileName(directory);
+                var destSubDir = Path.Combine(targetDir, dirName);
+                await CopyingAllFilesInNewRepository(directory, destSubDir);
+            });
+        }
+
+        private async Task AddAndCheckinFilesInNewRepository()
+        {
+            RunCmd($"cm mkworkspace {projectName} {projectLocation} {projectName}@{fullServerName}");
+            RunCmdWithOutput($"cm add . --recursive", projectLocation);
+            RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowMainLatest} changeset.\"", projectLocation);
         }
 
         #region CommonMethod
@@ -118,16 +189,18 @@ namespace CreateProjectOnline
 
         private List<int> GetMainBranchChangeset()
         {
-            var workspaceNames = new List<int>();
-            var output = RunCmdWithOutput("cm find changeset \"where branch='main'\" --format=\"{changesetid}\"");
+            var changesetIds = new List<int>();
+            var output = RunCmdWithOutput("cm find changeset \"where branch='main'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
+            //Debug.WriteLine(output);
 
-            /// Each line typically contains workspace info, e.g.: WorkspaceName  C:\Path\To\Workspace  
-            /// Repository@Server
-            foreach (var line in output)
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
-                workspaceNames.Add(line);
+                if (int.TryParse(line.Trim(), out int id))
+                {
+                    changesetIds.Add(id);
+                }
             }
-            return workspaceNames;
+            return changesetIds;
         }
 
         private void RunCmd(string command)

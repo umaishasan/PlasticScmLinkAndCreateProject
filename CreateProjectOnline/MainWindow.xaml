@@ -11,17 +11,17 @@
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Button Content="Create" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="189,245,0,0" VerticalAlignment="Top" Width="199" Click="CreateProject"/>
-        <Label Content="Plastic Organization" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="123,77,0,0" VerticalAlignment="Top" Height="31"/>
-        <ComboBox x:Name="SelectOrganizationDd" Grid.ColumnSpan="2" HorizontalAlignment="Left"  Margin="268,79,0,0" VerticalAlignment="Top" Width="168" SelectionChanged="ComboBox_SelectionChanged" IsEditable="True">
+        <Button x:Name="CreateButton" Content="Create" HorizontalAlignment="Center" Margin="0,210,0,0" VerticalAlignment="Top" Width="198" Click="CreateProject" Grid.Column="1" RenderTransformOrigin="0.505,0.152" IsEnabled="False"/>
+        <Label Content="Plastic Organization" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,65,0,0" VerticalAlignment="Top" Height="31"/>
+        <ComboBox x:Name="SelectOrganizationDd" Grid.ColumnSpan="2" HorizontalAlignment="Left"  Margin="266,67,0,0" VerticalAlignment="Top" Width="168" SelectionChanged="ComboBox_SelectionChanged" IsEditable="True">
             <ComboBoxItem Content="LocLab_Consulting_GmbH"/>
             <ComboBoxItem Content="thelocationlabdeveloper"/>
         </ComboBox>
-        <Label Content="Project Name" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="123,131,0,0" VerticalAlignment="Top"/>
-        <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="268,135,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
-        <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="123,179,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="268,183,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False" IsTabStop="False" Text=""/>
-        <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="416,181,0,0" VerticalAlignment="Top" Width="67" Click="Button_Click"/>
-
+        <Label Content="Project Name" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,107,0,0" VerticalAlignment="Top"/>
+        <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,111,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
+        <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="123,147,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="268,151,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False" IsTabStop="False" Text="" TextChanged="ProjectLocationTxt_TextChanged"/>
+        <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="416,150,0,0" VerticalAlignment="Top" Width="67" Click="Button_Click"/>
+        <ProgressBar x:Name="OperationProgressBar" Grid.ColumnSpan="2" Height="20" Margin="132,270,132,67" Foreground="Green" Visibility="Visible" Minimum="0" Maximum="100" Value="0"/>
     </Grid>
 </Window>

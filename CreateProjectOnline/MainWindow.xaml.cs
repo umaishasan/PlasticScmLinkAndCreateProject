@@ -11,6 +11,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace CreateProjectOnline
 {
@@ -20,6 +21,7 @@ namespace CreateProjectOnline
     public partial class MainWindow : Window
     {
         private Controller _controller;
+
         public string selectOrganization;
         public string projectName;
         public string projectLocation;
@@ -39,6 +41,7 @@ namespace CreateProjectOnline
                 selectOrganization = selectOrg[1];
             }
             Debug.WriteLine("What is in dd: "+selectOrganization);
+            UpdateCreateButtonState();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -68,12 +71,35 @@ namespace CreateProjectOnline
                 projectName = textBox.Text;
                 Debug.WriteLine($"Project Name: {projectName}");
             }
+            UpdateCreateButtonState();
         }
 
-        private void CreateProject(object sender, RoutedEventArgs e)
+        private void ProjectLocationTxt_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateCreateButtonState();
+        }
+
+        private async void CreateProject(object sender, RoutedEventArgs e)
         {
             _controller = new Controller(selectOrganization, projectName, projectLocation);
-            _controller.CreateProjectOnline();
+            OperationProgressBar.Visibility = Visibility.Visible;
+            OperationProgressBar.Value = 0;
+            OperationProgressBar.IsIndeterminate = true;
+            await Task.Run(() =>
+            {
+                _controller.CreateProjectOnline();
+            });
+            OperationProgressBar.IsIndeterminate = false;
+            OperationProgressBar.Value = 100;
+            OperationProgressBar.Visibility = Visibility.Collapsed;
+        }
+
+        private void UpdateCreateButtonState()
+        {
+            CreateButton.IsEnabled =
+                !string.IsNullOrWhiteSpace(selectOrganization) &&
+                !string.IsNullOrWhiteSpace(projectName) &&
+                !string.IsNullOrWhiteSpace(projectLocation);
         }
     }
 }
