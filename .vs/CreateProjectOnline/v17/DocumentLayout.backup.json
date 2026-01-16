@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|d:\\@tll_udrive_projects\\wpf\\plasticscmlinkandcreateproject\\createprojectonline\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|solutionrelative:createprojectonline\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|d:\\@tll_udrive_projects\\wpf\\plasticscmlinkandcreateproject\\createprojectonline\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|solutionrelative:createprojectonline\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|d:\\@tll_udrive_projects\\wpf\\plasticscmlinkandcreateproject\\createprojectonline\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|solutionrelative:createprojectonline\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5B8A8D49-79DB-4F60-BC86-2967E804F1F7}|CreateProjectOnline\\CreateProjectOnline.csproj|d:\\@tll_udrive_projects\\wpf\\plasticscmlinkandcreateproject\\createprojectonline\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -22,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
@@ -33,30 +33,31 @@
               "ToolTip": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\MainWindow.xaml",
               "RelativeToolTip": "CreateProjectOnline\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-01-13T05:57:00.118Z"
+              "WhenOpened": "2026-01-13T05:57:00.118Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "CreateProjectOnline\\MainWindow.xaml.cs",
               "ToolTip": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\MainWindow.xaml.cs",
               "RelativeToolTip": "CreateProjectOnline\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAD8AAAAAAAAAAAAzwFcAAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAFwAAAAAAAAAAAAmwHUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-13T05:56:57.023Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Controller.cs",
               "DocumentMoniker": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\Controller.cs",
               "RelativeDocumentMoniker": "CreateProjectOnline\\Controller.cs",
               "ToolTip": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\Controller.cs",
               "RelativeToolTip": "CreateProjectOnline\\Controller.cs",
-              "ViewState": "AgIAABwAAAAAAAAAAAAmwCgAAABFAAAAAAAAAA==",
+              "ViewState": "AgIAACAAAAAAAAAAAIA4wDIAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-01-13T06:26:13.604Z",
               "EditorCaption": ""

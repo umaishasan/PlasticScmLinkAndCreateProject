@@ -31,15 +31,22 @@ namespace CreateProjectOnline
             this.projectLocation = projectLocation;
         }
 
-        public async Task CreateProjectOnline()
+        public async Task CreateProjectOnline(IProgress<int> progress)
         {
+            progress.Report(10);
             CheckContentWorkflowDownloaded();
+            progress.Report(20);
             CheckContentWorkflowChangeset();
+            progress.Report(20);
             ContentWorkflowChangesetMatchToMainChangeset();
+            progress.Report(10);
             CreateNewRepository();
+            progress.Report(20);
             await CopyingAllFilesInNewRepository(contentWorkflowProjectPath, projectLocation);
             Debug.WriteLine("Copying files and folder successfully");
+            progress.Report(15);
             await AddAndCheckinFilesInNewRepository();
+            progress.Report(5);
             Debug.WriteLine("Add and Checkin files successfully");
         }
 

@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CreateProjectOnline"
         mc:Ignorable="d"
-        Title="MainWindow" Height="373" Width="626">
-    <Grid>
+        Title="MainWindow" Height="375" Width="626">
+    <Grid HorizontalAlignment="Center" Width="626" Height="365" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition/>
@@ -19,9 +19,10 @@
         </ComboBox>
         <Label Content="Project Name" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,107,0,0" VerticalAlignment="Top"/>
         <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,111,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
-        <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="123,147,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="268,151,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False" IsTabStop="False" Text="" TextChanged="ProjectLocationTxt_TextChanged"/>
+        <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,147,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,151,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False" IsTabStop="False" Text="" TextChanged="ProjectLocationTxt_TextChanged"/>
         <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="416,150,0,0" VerticalAlignment="Top" Width="67" Click="Button_Click"/>
-        <ProgressBar x:Name="OperationProgressBar" Grid.ColumnSpan="2" Height="20" Margin="132,270,132,67" Foreground="Green" Visibility="Visible" Minimum="0" Maximum="100" Value="0"/>
+        <ProgressBar x:Name="OperationProgressBar" Grid.ColumnSpan="2" Height="20" Margin="132,270,132,67" Foreground="Green" Visibility="Collapsed" IsIndeterminate="False" Minimum="0" Maximum="100" Value="0"/>
+        <Label x:Name="ProgressBarComment" Content="Completed!" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="131,294,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
     </Grid>
 </Window>

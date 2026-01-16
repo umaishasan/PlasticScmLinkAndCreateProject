@@ -81,14 +81,30 @@ namespace CreateProjectOnline
 
         private async void CreateProject(object sender, RoutedEventArgs e)
         {
-            _controller = new Controller(selectOrganization, projectName, projectLocation);
-            OperationProgressBar.Visibility = Visibility.Visible;
-            OperationProgressBar.Value = 0;
-            OperationProgressBar.IsIndeterminate = true;
-            await _controller.CreateProjectOnline();
-            OperationProgressBar.IsIndeterminate = false;
-            OperationProgressBar.Value = 100;
-            OperationProgressBar.Visibility = Visibility.Collapsed;
+            try
+            {
+                OperationProgressBar.Visibility = Visibility.Visible;
+                OperationProgressBar.Value = 0;
+                _controller = new Controller(selectOrganization, projectName, projectLocation);
+                var progress = new Progress<int>(value =>
+                {
+                    OperationProgressBar.Value = OperationProgressBar.Value + value;
+                });
+                await Task.Run(() =>
+                {
+                    _controller.CreateProjectOnline(progress);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+            finally
+            {
+                OperationProgressBar.Value = 100;
+                //OperationProgressBar.Visibility = Visibility.Collapsed;
+                ProgressBarComment.Visibility= Visibility.Visible;
+            }
         }
 
         private void UpdateCreateButtonState()
