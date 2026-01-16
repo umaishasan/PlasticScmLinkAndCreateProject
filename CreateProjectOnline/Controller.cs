@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Linq;
 
 namespace CreateProjectOnline
 {
@@ -17,6 +18,7 @@ namespace CreateProjectOnline
         public string projectName;
         public string projectLocation;
         public List<string> workspaceName = new();
+        public string comment = "";
 
         ///All variables from here related to plasticscm 
         private string contentWorkflowProject;
@@ -34,17 +36,27 @@ namespace CreateProjectOnline
         public async Task CreateProjectOnline(IProgress<int> progress)
         {
             progress.Report(10);
+            comment = "Check DTH_Content_Workflow project downloaded or not.";
             CheckContentWorkflowDownloaded();
             progress.Report(20);
+            comment = "Check DTH_Content_Workflow current changeset number.";
             CheckContentWorkflowChangeset();
-            progress.Report(20);
+            progress.Report(15);
+            comment = "Match DTH_Content_Workflow changeset number to main latest changeset number";
+            progress.Report(5);
+            comment = "Switch to main's latest changeset.";
             ContentWorkflowChangesetMatchToMainChangeset();
             progress.Report(10);
+            comment = "Create new repository for the new project.";
             CreateNewRepository();
-            progress.Report(20);
+            progress.Report(15);
+            comment = "Copying all files from DTH_Content_Workflow to new repository.";
             await CopyingAllFilesInNewRepository(contentWorkflowProjectPath, projectLocation);
+            progress.Report(5);
+            comment = "Copying files and folder successfully!";
             Debug.WriteLine("Copying files and folder successfully");
             progress.Report(15);
+            comment = "Adding and Checking (push) files to new repository.";
             await AddAndCheckinFilesInNewRepository();
             progress.Report(5);
             Debug.WriteLine("Add and Checkin files successfully");
@@ -149,6 +161,8 @@ namespace CreateProjectOnline
         {
             if (Path.GetFileName(sourceDir).Equals(".plastic", StringComparison.OrdinalIgnoreCase))
                 return;
+            if(Path.GetFileName(sourceDir).Equals("Library", StringComparison.OrdinalIgnoreCase))
+                return;
 
             if (!Directory.Exists(targetDir))
             {
@@ -206,6 +220,12 @@ namespace CreateProjectOnline
                 }
             }
             return changesetIds;
+        }
+
+        public string CommentProgress()
+        {
+            //Debug.WriteLine(comment);
+            return comment;
         }
 
         private void RunCmd(string command)

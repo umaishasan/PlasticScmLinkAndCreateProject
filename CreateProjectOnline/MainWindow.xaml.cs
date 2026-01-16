@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Reflection;
+using System.IO;
 
 namespace CreateProjectOnline
 {
@@ -81,14 +82,22 @@ namespace CreateProjectOnline
 
         private async void CreateProject(object sender, RoutedEventArgs e)
         {
+            string projectPath = projectLocation + "\\" + projectName;
+            if (!Directory.Exists(projectPath))
+            {
+                Directory.CreateDirectory(projectPath);
+            }
+
             try
             {
                 OperationProgressBar.Visibility = Visibility.Visible;
+                ProgressBarComment2.Visibility = Visibility.Visible;
                 OperationProgressBar.Value = 0;
-                _controller = new Controller(selectOrganization, projectName, projectLocation);
+                _controller = new Controller(selectOrganization, projectName, projectPath);
                 var progress = new Progress<int>(value =>
                 {
                     OperationProgressBar.Value = OperationProgressBar.Value + value;
+                    ProgressBarComment2.Content = _controller.CommentProgress();
                 });
                 await Task.Run(() =>
                 {
@@ -104,6 +113,7 @@ namespace CreateProjectOnline
                 OperationProgressBar.Value = 100;
                 //OperationProgressBar.Visibility = Visibility.Collapsed;
                 ProgressBarComment.Visibility= Visibility.Visible;
+                ProgressBarComment2.Visibility = Visibility.Collapsed;
             }
         }
 
