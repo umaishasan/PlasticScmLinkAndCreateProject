@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CreateProjectOnline
 {
@@ -15,6 +16,7 @@ namespace CreateProjectOnline
         public string selectOrganization;
         public string projectName;
         public string projectLocation;
+        public List<string> workspaceName = new();
 
         ///All variables from here related to plasticscm 
         private string contentWorkflowProject;
@@ -29,7 +31,7 @@ namespace CreateProjectOnline
             this.projectLocation = projectLocation;
         }
 
-        public async void CreateProjectOnline()
+        public async Task CreateProjectOnline()
         {
             CheckContentWorkflowDownloaded();
             CheckContentWorkflowChangeset();
@@ -43,22 +45,37 @@ namespace CreateProjectOnline
 
         private void CheckContentWorkflowDownloaded()
         {
-            var workspaceNames = GetWorkspaceNames();
-            foreach (var name in workspaceNames)
+            var output = RunCmdWithOutput("cm workspace list");
+            bool found = false;
+
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var nameSplited = name.Split('@');
-                var pathSplited = name.Split(' ').LastOrDefault();
+                //Debug.WriteLine("Workspace: " + line);
+                workspaceName.Add(line);
+
+                var nameSplited = line.Split('@');
+                var pathSplited = line.Split(' ').LastOrDefault();
+                //Debug.WriteLine("Workspace path: " + pathSplited);
+
                 if (nameSplited[0] == "DTH_Content_Workflow")
                 {
                     contentWorkflowProject = nameSplited[0];
                     contentWorkflowProjectPath = pathSplited;
                     Debug.WriteLine($"Is this same: {nameSplited[0]} or {contentWorkflowProject}");
                     Debug.WriteLine($"Project path: {pathSplited} or {contentWorkflowProjectPath}");
+                    found = true;
+                    break; // Stop searching after finding the desired workspace
                 }
-                else
-                {
-                    Debug.WriteLine("Content Workflow project is not downloaded");
-                }
+            }
+
+            if (!found)
+            {
+                MessageBox.Show(
+                    "DTH_Content_Workflow project is not downloaded. Download from main's latest.",
+                    "Content Workflow Not Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
             }
         }
 
@@ -167,25 +184,6 @@ namespace CreateProjectOnline
         }
 
         #region CommonMethod
-
-        private List<string> GetWorkspaceNames()
-        {
-            var workspaceNames = new List<string>();
-            var output = RunCmdWithOutput("cm workspace list");
-
-            /// Each line typically contains workspace info, e.g.: WorkspaceName  C:\Path\To\Workspace  
-            /// Repository@Server
-            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                workspaceNames.Add(line);
-                /*var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
-                {
-                    //TO-DO: process parts[0] as workspace name
-                }*/
-            }
-            return workspaceNames;
-        }
 
         private List<int> GetMainBranchChangeset()
         {

@@ -85,10 +85,7 @@ namespace CreateProjectOnline
             OperationProgressBar.Visibility = Visibility.Visible;
             OperationProgressBar.Value = 0;
             OperationProgressBar.IsIndeterminate = true;
-            await Task.Run(() =>
-            {
-                _controller.CreateProjectOnline();
-            });
+            await _controller.CreateProjectOnline();
             OperationProgressBar.IsIndeterminate = false;
             OperationProgressBar.Value = 100;
             OperationProgressBar.Visibility = Visibility.Collapsed;
