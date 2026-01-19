@@ -25,6 +25,8 @@ namespace CreateProjectOnline
         private string contentWorkflowProjectPath;
         private int contentWorkflowCurrentChangeset;
         private int contentWorkflowMainLatest;
+        private bool isUndoChangeset = false;
+        private bool isContentWorkflowDownloaded;
 
         public Controller(string selectOrganization, string projectName,string projectLocation)
         {
@@ -41,10 +43,12 @@ namespace CreateProjectOnline
             progress.Report(20);
             comment = "Check DTH_Content_Workflow current changeset number.";
             CheckContentWorkflowChangeset();
-            progress.Report(15);
+            progress.Report(10);
             comment = "Match DTH_Content_Workflow changeset number to main latest changeset number";
             progress.Report(5);
             comment = "Switch to main's latest changeset.";
+            progress.Report(5);//50
+            comment = "Undoing changeset & Main to switch.";
             ContentWorkflowChangesetMatchToMainChangeset();
             progress.Report(10);
             comment = "Create new repository for the new project.";
@@ -65,7 +69,7 @@ namespace CreateProjectOnline
         private void CheckContentWorkflowDownloaded()
         {
             var output = RunCmdWithOutput("cm workspace list");
-            bool found = false;
+            bool found = isContentWorkflowDownloaded = false;
 
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -82,19 +86,16 @@ namespace CreateProjectOnline
                     contentWorkflowProjectPath = pathSplited;
                     Debug.WriteLine($"Is this same: {nameSplited[0]} or {contentWorkflowProject}");
                     Debug.WriteLine($"Project path: {pathSplited} or {contentWorkflowProjectPath}");
-                    found = true;
+                    found = isContentWorkflowDownloaded = true;
                     break; // Stop searching after finding the desired workspace
                 }
             }
 
             if (!found)
             {
-                MessageBox.Show(
-                    "DTH_Content_Workflow project is not downloaded. Download from main's latest.",
-                    "Content Workflow Not Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                isContentWorkflowDownloaded = false;
+                MessageBox.Show("DTH_Content_Workflow project is not downloaded. Download from main's latest.","Content Workflow Not Found",MessageBoxButton.OK,MessageBoxImage.Warning);
+                return;
             }
         }
 
@@ -128,17 +129,26 @@ namespace CreateProjectOnline
                 Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
                 
                 ///undo all changes
-                RunCmdWithOutput("cm undo --all && cm clean", contentWorkflowProjectPath);
-                RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
-                Debug.WriteLine($"Undo all changes: ");
+                var result = MessageBox.Show("DTH_Content_Workflow's current changeset will undo all work.","Do you want to undo changeset ?",MessageBoxButton.YesNo,MessageBoxImage.Warning);
+                isUndoChangeset = (result == MessageBoxResult.Yes);
+                if (isUndoChangeset)
+                {
+                    RunCmdWithOutput("cm undo . -r", contentWorkflowProjectPath);
+                    RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                    Debug.WriteLine($"Undo all changes: ");
 
-                ///Try to switch in main latest
-                var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
-                var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
-                
-                Debug.WriteLine($"Switch output: {switchOutput}");
-                //Debug.WriteLine($"Status output: {statusOutput}");
-                Debug.WriteLine("Switch to main latest successfully");
+                    ///Try to switch in main latest
+                    var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
+                    var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+
+                    Debug.WriteLine($"Switch output: {switchOutput}");
+                    //Debug.WriteLine($"Status output: {statusOutput}");
+                    Debug.WriteLine("Switch to main latest successfully");
+                }
+                else
+                {
+                    return;
+                }
             }
             else
             {
@@ -182,7 +192,7 @@ namespace CreateProjectOnline
                 }
 
                 var destFile = Path.Combine(targetDir, fileName);
-                File.Copy(file, destFile, true);
+                File.Copy(file, destFile, false);
             });
 
             var directories = Directory.GetDirectories(sourceDir);
@@ -202,6 +212,48 @@ namespace CreateProjectOnline
             RunCmd($"cm mkworkspace {projectName} {projectLocation} {projectName}@{fullServerName}");
             RunCmdWithOutput($"cm add . --recursive", projectLocation);
             RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowMainLatest} changeset.\"", projectLocation);
+        }
+
+        public static string PlasticVersion()
+        {
+            var output = RunCmdOut("cm version");
+            Debug.WriteLine(output);
+            return output;
+        }
+
+        public static string GetOrganization()
+        {
+            string cloudRegionsSrcPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"plastic4","cloudregions.conf");
+            string cloudRegionsDesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"plastic4","cloudregions.conf.txt");
+            string lastValidLine = null;
+            Debug.WriteLine(cloudRegionsSrcPath);
+            File.Copy(cloudRegionsSrcPath, cloudRegionsDesPath, true);
+            foreach (var line in File.ReadLines(cloudRegionsDesPath))
+            {
+                var trimmedLine = line.Trim();
+                if (!trimmedLine.StartsWith("//") && !string.IsNullOrWhiteSpace(trimmedLine))
+                {
+                    lastValidLine = trimmedLine;
+                }
+            }
+            string[] lastValidLineSplit = lastValidLine.Split('=');
+            string[] lastValidLineSplited = lastValidLineSplit[1].Split('@');
+            Debug.WriteLine(lastValidLineSplited[0]);
+            return lastValidLineSplited[0];
+        }
+
+        public static bool IsPlasticLogedIn()
+        {
+            var output = RunCmdOut("cm whoami");
+            Debug.WriteLine(output);
+            if (!string.IsNullOrEmpty(output))
+            {
+                Debug.WriteLine("Already loged in plasticscm: "+output);
+                return true;
+            }
+            MessageBox.Show("You are not logged in to PlasticSCM. Please log in and try again.", "Not Logged In", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MainWindow.GetWindow(Application.Current.MainWindow).Close();
+            return false;
         }
 
         #region CommonMethod
@@ -228,6 +280,21 @@ namespace CreateProjectOnline
             return comment;
         }
 
+        public string CommentComplete()
+        {
+            string complete = "";
+            if (isContentWorkflowDownloaded)
+            {
+                complete = "Successfully Completed!";
+            }
+            else
+            {
+                complete = "Operation Failed!";
+            }
+            
+            return complete;
+        }
+
         private void RunCmd(string command)
         {
             Process process = new Process();
@@ -241,6 +308,20 @@ namespace CreateProjectOnline
         }
 
         private string RunCmdWithOutput(string command)
+        {
+            Process process = new Process();
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = "/c " + command;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            return output;
+        }
+
+        public static string RunCmdOut(string command)
         {
             Process process = new Process();
             process.StartInfo.FileName = "cmd.exe";

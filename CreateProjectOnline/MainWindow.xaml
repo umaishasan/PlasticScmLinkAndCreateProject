@@ -14,16 +14,16 @@
         <Button x:Name="CreateButton" Content="Create" HorizontalAlignment="Center" Margin="0,210,0,0" VerticalAlignment="Top" Width="198" Click="CreateProject" Grid.Column="1" RenderTransformOrigin="0.505,0.152" IsEnabled="False"/>
         <Label Content="Plastic Organization" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,65,0,0" VerticalAlignment="Top" Height="31"/>
         <ComboBox x:Name="SelectOrganizationDd" Grid.ColumnSpan="2" HorizontalAlignment="Left"  Margin="266,67,0,0" VerticalAlignment="Top" Width="168" SelectionChanged="ComboBox_SelectionChanged" IsEditable="True">
-            <ComboBoxItem Content="LocLab_Consulting_GmbH"/>
-            <ComboBoxItem Content="thelocationlabdeveloper"/>
+            <ComboBoxItem x:Name="SelectOrganizationDdItem" Content=""/>
         </ComboBox>
         <Label Content="New Project Name" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,107,0,0" VerticalAlignment="Top"/>
-        <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,111,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
+        <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,111,0,0" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
         <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="121,147,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="266,151,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False" IsTabStop="False" Text="" TextChanged="ProjectLocationTxt_TextChanged"/>
         <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="416,150,0,0" VerticalAlignment="Top" Width="67" Click="Button_Click"/>
         <ProgressBar x:Name="OperationProgressBar" Grid.ColumnSpan="2" Height="20" Margin="131,292,133,53" Foreground="Green" Visibility="Collapsed" IsIndeterminate="False" Minimum="0" Maximum="100" Value="0"/>
-        <Label x:Name="ProgressBarComment" Content="Completed!" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="130,312,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
-        <Label x:Name="ProgressBarComment2" Content="Completed!" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="131,264,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
+        <Label x:Name="ProgressBarComment" Content="" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="130,312,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
+        <Label x:Name="ProgressBarComment2" Content="" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="131,264,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
+        <Label x:Name="PlasticVersion" Content="" HorizontalAlignment="Center" Visibility="Visible" VerticalAlignment="Top" FontSize="10" Grid.Column="1"/>
     </Grid>
 </Window>

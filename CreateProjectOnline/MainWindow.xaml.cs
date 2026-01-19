@@ -30,6 +30,9 @@ namespace CreateProjectOnline
         public MainWindow()
         {
             InitializeComponent();
+            PlasticVersion.Content = "Using PlasticSCM version: " + Controller.PlasticVersion();
+            Controller.IsPlasticLogedIn();
+            SelectOrganizationDdItem.Content = Controller.GetOrganization();
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -41,7 +44,7 @@ namespace CreateProjectOnline
                 selectOrg = comboBox.SelectedItem.ToString().Split(':');
                 selectOrganization = selectOrg[1];
             }
-            Debug.WriteLine("What is in dd: "+selectOrganization);
+            Debug.WriteLine("What is in dd:"+selectOrganization);
             UpdateCreateButtonState();
         }
 
@@ -90,10 +93,10 @@ namespace CreateProjectOnline
 
             try
             {
+                _controller = new Controller(selectOrganization, projectName, projectPath);
                 OperationProgressBar.Visibility = Visibility.Visible;
                 ProgressBarComment2.Visibility = Visibility.Visible;
                 OperationProgressBar.Value = 0;
-                _controller = new Controller(selectOrganization, projectName, projectPath);
                 var progress = new Progress<int>(value =>
                 {
                     OperationProgressBar.Value = OperationProgressBar.Value + value;
@@ -112,7 +115,8 @@ namespace CreateProjectOnline
             {
                 OperationProgressBar.Value = 100;
                 //OperationProgressBar.Visibility = Visibility.Collapsed;
-                ProgressBarComment.Visibility= Visibility.Visible;
+                ProgressBarComment.Visibility = Visibility.Visible;
+                ProgressBarComment.Content = _controller.CommentComplete();
                 ProgressBarComment2.Visibility = Visibility.Collapsed;
             }
         }
@@ -124,5 +128,6 @@ namespace CreateProjectOnline
                 !string.IsNullOrWhiteSpace(projectName) &&
                 !string.IsNullOrWhiteSpace(projectLocation);
         }
+
     }
 }
