@@ -1,32 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Xml.Linq;
 
 namespace CreateProjectOnline
 {
     public class Controller
     {
+        #region Variables
+
         public string server = "@cloud";
         public string fullServerName;
         public string selectOrganization;
         public string projectName;
         public string projectLocation;
         public List<string> workspaceName = new();
+        public static List<string> repositoryNames = new();
         public string comment = "";
-
-        ///All variables from here related to plasticscm 
+        public bool isContentWorkflowDownloaded;
+ 
         private string contentWorkflowProject;
         private string contentWorkflowProjectPath;
         private int contentWorkflowCurrentChangeset;
         private int contentWorkflowMainLatest;
         private bool isUndoChangeset = false;
-        private bool isContentWorkflowDownloaded;
+
+        #endregion
 
         public Controller(string selectOrganization, string projectName,string projectLocation)
         {
@@ -37,33 +35,41 @@ namespace CreateProjectOnline
 
         public async Task CreateProjectOnline(IProgress<int> progress)
         {
-            progress.Report(10);
+            progress.Report(5);
             comment = "Check DTH_Content_Workflow project downloaded or not.";
             CheckContentWorkflowDownloaded();
-            progress.Report(20);
-            comment = "Check DTH_Content_Workflow current changeset number.";
-            CheckContentWorkflowChangeset();
-            progress.Report(10);
-            comment = "Match DTH_Content_Workflow changeset number to main latest changeset number";
-            progress.Report(5);
-            comment = "Switch to main's latest changeset.";
-            progress.Report(5);//50
-            comment = "Undoing changeset & Main to switch.";
-            ContentWorkflowChangesetMatchToMainChangeset();
-            progress.Report(10);
-            comment = "Create new repository for the new project.";
-            CreateNewRepository();
-            progress.Report(15);
-            comment = "Copying all files from DTH_Content_Workflow to new repository.";
-            await CopyingAllFilesInNewRepository(contentWorkflowProjectPath, projectLocation);
-            progress.Report(5);
-            comment = "Copying files and folder successfully!";
-            Debug.WriteLine("Copying files and folder successfully");
-            progress.Report(15);
-            comment = "Adding and Checking (push) files to new repository.";
-            await AddAndCheckinFilesInNewRepository();
-            progress.Report(5);
-            Debug.WriteLine("Add and Checkin files successfully");
+            if (isContentWorkflowDownloaded)
+            {
+                progress.Report(5);
+                comment = "Createing folder for new project.";
+                CreateFolderForNewProject();
+                progress.Report(20);
+                comment = "Check DTH_Content_Workflow current changeset number.";
+                CheckContentWorkflowChangeset();
+                progress.Report(10);
+                comment = "Undo changeset.";
+                UndoChangeset();
+                progress.Report(10); //50
+                if (isUndoChangeset)
+                {
+                    comment = "Switch to main's latest changeset.";
+                    SwitchToMainChangeset();
+                }
+                progress.Report(10);
+                comment = "Create new repository for the new project.";
+                CreateNewRepository();
+                progress.Report(15);
+                comment = "Copying all files from DTH_Content_Workflow to new repository.";
+                await CopyingAllFilesInNewRepository(contentWorkflowProjectPath, projectLocation);
+                progress.Report(5);
+                comment = "Copying files and folder successfully!";
+                Debug.WriteLine("Copying files and folder successfully");
+                progress.Report(15);
+                comment = "Adding and Checking (push) files to new repository.";
+                await AddAndCheckinFilesInNewRepository();
+                progress.Report(5);
+                Debug.WriteLine("Add and Checkin files successfully");
+            }
         }
 
         private void CheckContentWorkflowDownloaded()
@@ -94,8 +100,27 @@ namespace CreateProjectOnline
             if (!found)
             {
                 isContentWorkflowDownloaded = false;
-                MessageBox.Show("DTH_Content_Workflow project is not downloaded. Download from main's latest.","Content Workflow Not Found",MessageBoxButton.OK,MessageBoxImage.Warning);
-                return;
+                var result = MessageBox.Show("The DTH_Content_Workflow project is not downloaded. Please download the latest version from main.", "DTH_Content_Workflow Not Found",MessageBoxButton.OK,MessageBoxImage.Warning);                if (result == MessageBoxResult.OK)
+                if(result == MessageBoxResult.OK)
+                {
+                    Debug.WriteLine("Is this main window close ? "+result);
+                    return;
+                }
+                //MainWindow.GetWindow(Application.Current.MainWindow).Close();
+                //return;
+            }
+        }
+
+        private void CreateFolderForNewProject()
+        {
+            if (isContentWorkflowDownloaded)
+            {
+                string projectPath = projectLocation + "\\" + projectName;
+                if (!Directory.Exists(projectPath))
+                {
+                    Directory.CreateDirectory(projectPath);
+                    projectLocation = projectPath;
+                }
             }
         }
 
@@ -119,17 +144,17 @@ namespace CreateProjectOnline
             }
         }
 
-        private void ContentWorkflowChangesetMatchToMainChangeset()
+        private void UndoChangeset()
         {
             var changesetNo = GetMainBranchChangeset();
             var lastChangesetNo = changesetNo.LastOrDefault();
             contentWorkflowMainLatest = int.Parse(lastChangesetNo.ToString());
-            if(contentWorkflowCurrentChangeset != contentWorkflowMainLatest)
+            if (contentWorkflowCurrentChangeset != contentWorkflowMainLatest)
             {
                 Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
-                
+
                 ///undo all changes
-                var result = MessageBox.Show("DTH_Content_Workflow's current changeset will undo all work.","Do you want to undo changeset ?",MessageBoxButton.YesNo,MessageBoxImage.Warning);
+                var result = MessageBox.Show("The current changeset of DTH_Content_Workflow will undo all the work.", "Undo changeset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 isUndoChangeset = (result == MessageBoxResult.Yes);
                 if (isUndoChangeset)
                 {
@@ -137,16 +162,51 @@ namespace CreateProjectOnline
                     RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
                     Debug.WriteLine($"Undo all changes: ");
 
-                    ///Try to switch in main latest
-                    var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
-                    var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                    // Find and delete all files in "Added" state
+                    var statusOutput = RunCmdWithOutput("cm status --noheader", contentWorkflowProjectPath);
+                    bool inAddedSection = false;
+                    foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var trimmed = line.Trim();
+                        if (trimmed.Equals("Added", StringComparison.OrdinalIgnoreCase))
+                        {
+                            inAddedSection = true;
+                            continue;
+                        }
 
-                    Debug.WriteLine($"Switch output: {switchOutput}");
-                    //Debug.WriteLine($"Status output: {statusOutput}");
-                    Debug.WriteLine("Switch to main latest successfully");
+                        //Debug.WriteLine("----------> Processing line: " + trimmed);
+                        if (inAddedSection && trimmed.StartsWith("Private"))
+                        {
+                            var parts = trimmed.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length > 0)
+                            {
+                                var assetPath = trimmed.Split("Assets").LastOrDefault();
+                                var fullPath = Path.Combine(contentWorkflowProjectPath, "Assets"+assetPath);
+                                try
+                                {
+                                    //Debug.WriteLine("Full path to delete: " + fullPath);
+                                    if (File.Exists(fullPath))
+                                    {
+                                        File.Delete(fullPath);
+                                        Debug.WriteLine($"Deleted added file: {fullPath}");
+                                    }
+                                    if (Directory.Exists(fullPath))
+                                    {
+                                        Directory.Delete(fullPath, true);
+                                        Debug.WriteLine($"Deleted added directory: {fullPath}");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
+                    Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
                     return;
                 }
             }
@@ -155,6 +215,16 @@ namespace CreateProjectOnline
                 Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
                 return;
             }
+        }
+
+        private void SwitchToMainChangeset()
+        {
+            var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
+            var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+
+            Debug.WriteLine($"Switch output: {switchOutput}");
+            //Debug.WriteLine($"Status output: {statusOutput}");
+            Debug.WriteLine("Switch to main latest successfully");
         }
 
         private void CreateNewRepository()
@@ -211,7 +281,16 @@ namespace CreateProjectOnline
         {
             RunCmd($"cm mkworkspace {projectName} {projectLocation} {projectName}@{fullServerName}");
             RunCmdWithOutput($"cm add . --recursive", projectLocation);
-            RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowMainLatest} changeset.\"", projectLocation);
+            if (isUndoChangeset)
+            {
+                Debug.WriteLine("Checkin from main latest changeset.");
+                RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowMainLatest} changeset.\"", projectLocation);
+            }
+            else
+            {
+                Debug.WriteLine("Checkin from current latest changeset.");
+                RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowCurrentChangeset} changeset.\"", projectLocation);
+            }
         }
 
         public static string PlasticVersion()
@@ -251,7 +330,7 @@ namespace CreateProjectOnline
                 Debug.WriteLine("Already loged in plasticscm: "+output);
                 return true;
             }
-            MessageBox.Show("You are not logged in to PlasticSCM. Please log in and try again.", "Not Logged In", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("You are not logged in to Plastic SCM. Please log in and try again.", "Not Logged In", MessageBoxButton.OK, MessageBoxImage.Warning);
             MainWindow.GetWindow(Application.Current.MainWindow).Close();
             return false;
         }
@@ -274,6 +353,20 @@ namespace CreateProjectOnline
             return changesetIds;
         }
 
+        public static void GetAllRepo()
+        {
+            repositoryNames.Clear();
+            var output = RunCmdOut("cm repo list --server=LocLab_Consulting_GmbH@cloud");
+            //Debug.WriteLine(output);
+
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var repoName = line.Split('@').FirstOrDefault();
+                repositoryNames.Add(repoName);
+                //Debug.WriteLine(repoName);
+            }
+        }
+
         public string CommentProgress()
         {
             //Debug.WriteLine(comment);
@@ -285,14 +378,19 @@ namespace CreateProjectOnline
             string complete = "";
             if (isContentWorkflowDownloaded)
             {
-                complete = "Successfully Completed!";
+                complete = "Completed!";
             }
             else
             {
                 complete = "Operation Failed!";
             }
-            
             return complete;
+        }
+
+        public async Task DelayShutdown(int milliseconds)
+        {
+            await Task.Delay(milliseconds);
+            MainWindow.GetWindow(Application.Current.MainWindow).Close();
         }
 
         private void RunCmd(string command)

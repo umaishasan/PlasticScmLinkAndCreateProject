@@ -1,18 +1,7 @@
-﻿using System.Text;
-using System.Windows;
-using CreateProjectOnline;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Microsoft.Win32;
 using System.Diagnostics;
-using System.Reflection;
-using System.IO;
 
 namespace CreateProjectOnline
 {
@@ -33,6 +22,7 @@ namespace CreateProjectOnline
             PlasticVersion.Content = "Using PlasticSCM version: " + Controller.PlasticVersion();
             Controller.IsPlasticLogedIn();
             SelectOrganizationDdItem.Content = Controller.GetOrganization();
+            Controller.GetAllRepo();
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -73,7 +63,8 @@ namespace CreateProjectOnline
             if (textBox != null)
             {
                 projectName = textBox.Text;
-                Debug.WriteLine($"Project Name: {projectName}");
+                ProjectNameValidation(projectName);
+                //Debug.WriteLine($"Project Name: {projectName}");
             }
             UpdateCreateButtonState();
         }
@@ -85,15 +76,9 @@ namespace CreateProjectOnline
 
         private async void CreateProject(object sender, RoutedEventArgs e)
         {
-            string projectPath = projectLocation + "\\" + projectName;
-            if (!Directory.Exists(projectPath))
-            {
-                Directory.CreateDirectory(projectPath);
-            }
-
             try
             {
-                _controller = new Controller(selectOrganization, projectName, projectPath);
+                _controller = new Controller(selectOrganization, projectName, projectLocation);
                 OperationProgressBar.Visibility = Visibility.Visible;
                 ProgressBarComment2.Visibility = Visibility.Visible;
                 OperationProgressBar.Value = 0;
@@ -117,7 +102,9 @@ namespace CreateProjectOnline
                 //OperationProgressBar.Visibility = Visibility.Collapsed;
                 ProgressBarComment.Visibility = Visibility.Visible;
                 ProgressBarComment.Content = _controller.CommentComplete();
+                ProgressColorValidate();
                 ProgressBarComment2.Visibility = Visibility.Collapsed;
+                await _controller.DelayShutdown(3000);
             }
         }
 
@@ -129,5 +116,26 @@ namespace CreateProjectOnline
                 !string.IsNullOrWhiteSpace(projectLocation);
         }
 
+        private void ProjectNameValidation(string projectName)
+        {
+            foreach (var repoName in Controller.repositoryNames)
+            {
+                if (projectName != repoName)
+                {
+                    ProjectNameValidate.Content = "";
+                    continue;
+                }
+                ProjectNameValidate.Content = "Project name already exist.";
+                break;
+            }
+        }
+
+        private void ProgressColorValidate()
+        {
+            if (!_controller.isContentWorkflowDownloaded)
+            {
+                OperationProgressBar.Foreground = new SolidColorBrush(Colors.Red);
+            }
+        }
     }
 }
