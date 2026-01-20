@@ -19,7 +19,8 @@ For Checking is downloaded:
 =====================
 1) cm workspace list
 2) cm workspace list | findstr DTH_Content_Workflow
-3) cm find changeset "where branch='main'" --format="{changesetid}"
+3) 	* cm find changeset "where branch='main'" --format="{changesetid}"
+	* cm find changeset "where branch='/main/UH-UnityUpgrade'" --format="{changesetid}"
 4) type ".plastic\plastic.selector"
      Note: 1)  [ type ".plastic\plastic.selector" > "%TEMP%\plastic_selector.txt"]
 			[type "%TEMP%\plastic_selector.txt"]
