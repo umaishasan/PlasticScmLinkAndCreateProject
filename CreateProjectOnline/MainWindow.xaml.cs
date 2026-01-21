@@ -18,8 +18,8 @@ namespace CreateProjectOnline
 
         public MainWindow()
         {
-            _controller = new Controller(); 
             InitializeComponent();
+            _controller = new Controller(); 
             PlasticVersion.Content = "Using PlasticSCM version: " + _controller.PlasticVersion();
             _controller.IsPlasticLogedIn();
             SelectOrganizationDdItem.Content = _controller.GetOrganization();
@@ -55,7 +55,7 @@ namespace CreateProjectOnline
                 ProgressBarComment.Content = _controller.CommentComplete();
                 ProgressColorValidate();
                 ProgressBarComment2.Visibility = Visibility.Collapsed;
-                await _controller.DelayShutdown(3000);
+                await _controller.DelayShutdown(5000);
             }
         }
 

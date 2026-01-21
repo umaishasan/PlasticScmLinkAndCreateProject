@@ -84,7 +84,7 @@ namespace CreateProjectOnline
                 progress.Report(10); //50
                 if (isUndoChangeset)
                 {
-                    comment = "Switch to main's latest changeset.";
+                    comment = unityVersion == Versions[0] ? "Switch to main's latest changeset." : "Switch to Unity6's latest changeset.";
                     SwitchToMainChangeset();
                 }
                 progress.Report(10);
@@ -436,7 +436,7 @@ namespace CreateProjectOnline
             {
                 if (isUndoChangeset)
                 {
-                    Debug.WriteLine("Checkin from main latest changeset.");
+                    Debug.WriteLine("Checkin from Unity6 latest changeset.");
                     RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowSixLatest} changeset.\"", projectLocation);
                 }
                 else
