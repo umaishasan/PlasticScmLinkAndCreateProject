@@ -10,28 +10,34 @@ namespace CreateProjectOnline
 
         public string server = "@cloud";
         public string fullServerName;
-        public string[] Versions = { " Unity 2022", " Unity 06" };
-        public List<string> workspaceName = new();
-        public static List<string> repositoryNames = new();
         public string comment = "";
-        public bool isContentWorkflowDownloaded;
-
-        private string selectOrganization { get; set; }
-        private string projectName { get; set; }
-        private string projectLocation { get; set; }
-        private string unityVersion { get; set; }
-
         private string contentWorkflowProject;
         private string contentWorkflowProjectPath;
+        private string contentWorkflowProjPathDirective;
         private int contentWorkflowCurrentChangeset;
         private int contentWorkflowMainLatest;
         private int contentWorkflowSixLatest;
+
         private bool isUndoChangeset = false;
+        public bool isContentWorkflowDownloaded;
+        private bool isErrorBool = true;
+
+        public string[] Versions = { " Unity 2022", " Unity 06" };
+        public List<string> downloadedWorkspaces = new();
+        public static List<string> repositoryNames = new();
+        public List<int> mainChangesets = new();
+        public List<int> sixChangesets = new();
+
+        private string selectOrganization;
+        private string projectName;
+        private string projectLocation;
+        private string unityVersion;
 
         #endregion
 
-        public Controller(){}
+        #region Constructor
 
+        public Controller(){}
         public string PlasticOrganization
         {
             get => selectOrganization;
@@ -64,6 +70,16 @@ namespace CreateProjectOnline
                 unityVersion = value;
             }
         }
+        public bool CheckError
+        {
+            get => isErrorBool;
+            set
+            {
+                isErrorBool = value;
+            }
+        }
+
+        #endregion
 
         public async Task CreateProjectOnline(IProgress<int> progress)
         {
@@ -104,31 +120,38 @@ namespace CreateProjectOnline
             }
         }
 
+        #region CustomMethod
+
         private void CheckContentWorkflowDownloaded()
         {
-            var output = RunCmdWithOutput("cm workspace list");
+            if (isErrorBool)
+            {
+                MessageBox.Show("Checking DTH_Content_Workflow project downloaded or not.", "Checking", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             bool found = isContentWorkflowDownloaded = false;
-
-            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var line in downloadedWorkspaces)
             {
                 //Debug.WriteLine("Workspace: " + line);
-                workspaceName.Add(line);
-
                 var nameSplited = line.Split('@');
-                var pathSplited = line.Split(' ').LastOrDefault();
+                var pathSplited = line.Split(':').LastOrDefault();
+                var directiveSplited = line.Split(':').FirstOrDefault().ToString().Split(' ').LastOrDefault();
                 //Debug.WriteLine("Workspace path: " + pathSplited);
-
                 if (nameSplited[0] == "DTH_Content_Workflow")
                 {
                     contentWorkflowProject = nameSplited[0];
-                    contentWorkflowProjectPath = pathSplited;
+                    string pathContentWorkflow = pathSplited;
+                    contentWorkflowProjPathDirective = directiveSplited;
+                    contentWorkflowProjectPath = contentWorkflowProjPathDirective + ":" + pathContentWorkflow;
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show($"ProjectName: {contentWorkflowProject}, ProjectPath: {contentWorkflowProjectPath}", "Project Found!", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    found = isContentWorkflowDownloaded = true;
                     Debug.WriteLine($"Is this same: {nameSplited[0]} or {contentWorkflowProject}");
                     Debug.WriteLine($"Project path: {pathSplited} or {contentWorkflowProjectPath}");
-                    found = isContentWorkflowDownloaded = true;
                     break; // Stop searching after finding the desired workspace
                 }
             }
-
             if (!found)
             {
                 isContentWorkflowDownloaded = false;
@@ -139,6 +162,8 @@ namespace CreateProjectOnline
                     return;
                 }
             }
+            GetMainChangeset();
+            GetSixChangeset();
         }
 
         private void CreateFolderForNewProject()
@@ -152,59 +177,121 @@ namespace CreateProjectOnline
                     projectLocation = projectPath;
                 }
             }
+            if (isErrorBool)
+            {
+                MessageBox.Show("Folder Creation for new project", "Folder Create", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         private void CheckContentWorkflowChangeset()
         {
-            var directoryFound = contentWorkflowProjectPath.Split(':');
-            RunCmd($"{directoryFound}:");
             RunCmd($"cd \"{contentWorkflowProjectPath}\"");
             var output = RunCmdWithOutput($"cm status --header", contentWorkflowProjectPath);
             var outputSplited = output.Split("@");
-
-            if(unityVersion == Versions[0])
+            if (isErrorBool)
             {
-                Debug.WriteLine("Unity version: " + unityVersion);
+                MessageBox.Show("Check Content_Workflow changeset", "Checking Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            ///unity 2022
+            if (unityVersion == Versions[0])
+            {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand main latest changeset 
                 if (outputSplited.FirstOrDefault() == "/main")
                 {
                     Debug.WriteLine("Already in main branch: " + output);
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Already main latest changeset", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     return;
                 }
+                ///when you stand main's previous changeset or another changeset
                 else
                 {
-                    var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                    contentWorkflowCurrentChangeset = int.Parse(lastOutput[1]);
-                    Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    ///when you stand 6's latest changeset
+                    if (outputSplited.FirstOrDefault() == "/main/UH-UnityUpgrade")
+                    {
+                        contentWorkflowCurrentChangeset = sixChangesets.LastOrDefault();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Already 6 latest changeset: {contentWorkflowCurrentChangeset}", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        contentWorkflowCurrentChangeset = int.Parse(lastOutput[1]);
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Current changeset: {contentWorkflowCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    }
                 }
             } 
+            ///unity 06
             else if (unityVersion == Versions[1])
             {
-                Debug.WriteLine("Unity version: " + unityVersion);
-                if (outputSplited.FirstOrDefault() == GetBranchChangeset().LastOrDefault().ToString())
-                {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand 6 latest changeset
+                if (outputSplited.FirstOrDefault() == "/main/UH-UnityUpgrade")
+                {                                  
                     Debug.WriteLine("Already in 6 latest branch: " + output);
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Already 6 latest changeset", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     return;
                 }
+                ///when you stand 6's previous changeset or another changeset
                 else
                 {
-                    var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                    contentWorkflowCurrentChangeset = int.Parse(lastOutput[1]);
-                    Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    ///when you stand main's latest changeset
+                    if (outputSplited.FirstOrDefault() == "/main")
+                    {
+                        contentWorkflowCurrentChangeset = mainChangesets.LastOrDefault();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Already Main latest changeset: {contentWorkflowCurrentChangeset}", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        contentWorkflowCurrentChangeset = int.Parse(lastOutput[1]);
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Current changeset: {contentWorkflowCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + contentWorkflowCurrentChangeset);
+                    }
                 }
             }
         }
 
         private void UndoChangeset()
         {
-            var changesetNo = GetBranchChangeset();
-            var lastChangesetNo = changesetNo.LastOrDefault();
-
+            if (isErrorBool)
+            {
+                MessageBox.Show("Now You are in Undo method", "Undo Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            ///Unity 2022
             if (unityVersion == Versions[0])
             {
                 Debug.WriteLine("Unity version: " + unityVersion);
-                contentWorkflowMainLatest = int.Parse(lastChangesetNo.ToString());
+                contentWorkflowMainLatest = mainChangesets.LastOrDefault();
+                ///check current changeset and main latest changeset not equal then undo
                 if (contentWorkflowCurrentChangeset != contentWorkflowMainLatest)
                 {
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Current changeset & Main changeset not match", "Not Match", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
 
                     ///undo all changes
@@ -253,6 +340,10 @@ namespace CreateProjectOnline
                                     catch (Exception ex)
                                     {
                                         Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
+                                        if (isErrorBool)
+                                        {
+                                            MessageBox.Show("Failed to delete " + fullPath + ": " + ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        }
                                     }
                                 }
                             }
@@ -260,24 +351,36 @@ namespace CreateProjectOnline
                     }
                     else
                     {
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show("You select 'No' from undo popup", "Do not Undo", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                         Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
                         return;
                     }
                 }
                 else
                 {
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Current changeset & Main changeset Matched", "Matched", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     Debug.WriteLine($"Main latest: {contentWorkflowMainLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
                     return;
                 }
             }
+            ///Unity 06
             else if(unityVersion == Versions[1])
             {
                 Debug.WriteLine("Unity version: " + unityVersion);
-                contentWorkflowSixLatest = int.Parse(lastChangesetNo.ToString());
+                contentWorkflowSixLatest = sixChangesets.LastOrDefault();
                 if (contentWorkflowCurrentChangeset != contentWorkflowSixLatest)
                 {
-                    Debug.WriteLine($"Main latest: {contentWorkflowSixLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
-
+                    Debug.WriteLine($"6 latest: {contentWorkflowSixLatest}, current: {contentWorkflowCurrentChangeset} => Not Match.");
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Current changeset & 6 changeset not match", "Not Match", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     ///undo all changes
                     var result = MessageBox.Show("The current changeset of DTH_Content_Workflow will undo all the work.", "Undo changeset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     isUndoChangeset = (result == MessageBoxResult.Yes);
@@ -324,6 +427,10 @@ namespace CreateProjectOnline
                                     catch (Exception ex)
                                     {
                                         Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
+                                        if (isErrorBool)
+                                        {
+                                            MessageBox.Show("Failed to delete " + fullPath + ": " + ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        }
                                     }
                                 }
                             }
@@ -332,12 +439,20 @@ namespace CreateProjectOnline
                     else
                     {
                         Debug.WriteLine($"Main latest: {contentWorkflowSixLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show("You select 'No' from undo popup", "Do not Undo", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                         return;
                     }
                 }
                 else
                 {
                     Debug.WriteLine($"Main latest: {contentWorkflowSixLatest}, current: {contentWorkflowCurrentChangeset} => Already in main's latest.");
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Current changeset & 6 changeset Matched", "Matched", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     return;
                 }
             }
@@ -489,42 +604,68 @@ namespace CreateProjectOnline
             return false;
         }
 
+        #endregion
+
         #region CommonMethod
 
-        private List<int> GetBranchChangeset()
+        public void LoadDownloadedWorkspace()
         {
-            var changesetIds = new List<int>();
-            if(unityVersion == Versions[0])
+            downloadedWorkspaces.Clear();
+            var output = RunCmdWithOutput("cm workspace list");
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var output = RunCmdWithOutput("cm find changeset \"where branch='main'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
-                //Debug.WriteLine(output);
-                foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (int.TryParse(line.Trim(), out int id))
-                    {
-                        changesetIds.Add(id);
-                    }
-                }
+                //Debug.WriteLine("Workspace: " + line);
+                downloadedWorkspaces.Add(line);
             }
-            else if(unityVersion == Versions[1])
+            if (isErrorBool)
             {
-                var output = RunCmdWithOutput("cm find changeset \"where branch='/main/UH-UnityUpgrade'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
-                //Debug.WriteLine(output);
+                MessageBox.Show("You are in LoadDownloadedWorkspace method", "Getting Downloaded Workspace", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
 
-                foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+        public void GetMainChangeset()
+        {
+            mainChangesets.Clear();
+            var output = RunCmdWithOutput("cm find changeset \"where branch='main'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
+            //Debug.WriteLine(output);
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(line.Trim(), out int id))
                 {
-                    if (int.TryParse(line.Trim(), out int id))
-                    {
-                        changesetIds.Add(id);
-                    }
+                    mainChangesets.Add(id);
                 }
             }
-            
-            return changesetIds;
+            if (isErrorBool)
+            {
+                MessageBox.Show("You are in GetMainChangeset method", "Getting Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        public void GetSixChangeset()
+        {
+            sixChangesets.Clear();
+            var output = RunCmdWithOutput("cm find changeset \"where branch='/main/UH-UnityUpgrade'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
+            //Debug.WriteLine(output);
+
+            foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(line.Trim(), out int id))
+                {
+                    sixChangesets.Add(id);
+                }
+            }
+            if (isErrorBool)
+            {
+                MessageBox.Show("You are in GetSixChangeset method", "Getting Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         public void GetAllRepo()
         {
+            if (isErrorBool)
+            {
+                MessageBox.Show("You are in getting repository method", "Getting Repository", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             repositoryNames.Clear();
             var removeSpace = selectOrganization.Replace(" ", "");
             var output = RunCmdOut($"cm repo list --server={removeSpace}{server}");

@@ -23,6 +23,7 @@ namespace CreateProjectOnline
             PlasticVersion.Content = "Using PlasticSCM version: " + _controller.PlasticVersion();
             _controller.IsPlasticLogedIn();
             SelectOrganizationDdItem.Content = _controller.GetOrganization();
+            _controller.LoadDownloadedWorkspace();
         }
 
         private async void CreateProject(object sender, RoutedEventArgs e)
@@ -45,7 +46,7 @@ namespace CreateProjectOnline
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error");
+                MessageBox.Show("" + ex.Message, "Unknown Error!", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -55,9 +56,11 @@ namespace CreateProjectOnline
                 ProgressBarComment.Content = _controller.CommentComplete();
                 ProgressColorValidate();
                 ProgressBarComment2.Visibility = Visibility.Collapsed;
-                await _controller.DelayShutdown(5000);
+                //await _controller.DelayShutdown(5000);
             }
         }
+
+        #region Events
 
         private void ComboBox_OrganizationSelection(object sender, SelectionChangedEventArgs e)
         {
@@ -102,7 +105,7 @@ namespace CreateProjectOnline
                 projectName = textBox.Text;
                 _controller.NewProjectName = projectName;
                 ProjectNameValidation(projectName);
-                //Debug.WriteLine($"Project Name: {projectName}");
+                Debug.WriteLine($"Project Name: {projectName}");
             }
             UpdateCreateButtonState();
         }
@@ -125,6 +128,8 @@ namespace CreateProjectOnline
             Debug.WriteLine("What is in version dd:" + selectVersion);
             UpdateCreateButtonState();
         }
+
+        #endregion
 
         #region HelperMethods
 
