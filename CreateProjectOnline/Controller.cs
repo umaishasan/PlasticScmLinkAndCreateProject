@@ -33,11 +33,16 @@ namespace CreateProjectOnline
         private string projectLocation;
         private string unityVersion;
 
+        private PlasticCmdQuery plasticCmdQuery;
+
         #endregion
 
         #region Constructor
 
-        public Controller(){}
+        public Controller()
+        {
+            plasticCmdQuery = new PlasticCmdQuery();
+        }
         public string PlasticOrganization
         {
             get => selectOrganization;
@@ -186,7 +191,7 @@ namespace CreateProjectOnline
         private void CheckContentWorkflowChangeset()
         {
             RunCmd($"cd \"{contentWorkflowProjectPath}\"");
-            var output = RunCmdWithOutput($"cm status --header", contentWorkflowProjectPath);
+            var output = RunCmdWithOutput(plasticCmdQuery.Status, contentWorkflowProjectPath);
             var outputSplited = output.Split("@");
             if (isErrorBool)
             {
@@ -299,12 +304,12 @@ namespace CreateProjectOnline
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
-                        RunCmdWithOutput("cm undo . -r", contentWorkflowProjectPath);
-                        RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                        RunCmdWithOutput(plasticCmdQuery.UndoChanges, contentWorkflowProjectPath);
+                        RunCmdWithOutput(plasticCmdQuery.RefreshStatus, contentWorkflowProjectPath);
                         Debug.WriteLine($"Undo all changes: ");
 
                         // Find and delete all files in "Added" state
-                        var statusOutput = RunCmdWithOutput("cm status --noheader", contentWorkflowProjectPath);
+                        var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, contentWorkflowProjectPath);
                         bool inAddedSection = false;
                         foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                         {
@@ -386,12 +391,12 @@ namespace CreateProjectOnline
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
-                        RunCmdWithOutput("cm undo . -r", contentWorkflowProjectPath);
-                        RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                        RunCmdWithOutput(plasticCmdQuery.UndoChanges, contentWorkflowProjectPath);
+                        RunCmdWithOutput(plasticCmdQuery.RefreshStatus, contentWorkflowProjectPath);
                         Debug.WriteLine($"Undo all changes: ");
 
                         // Find and delete all files in "Added" state
-                        var statusOutput = RunCmdWithOutput("cm status --noheader", contentWorkflowProjectPath);
+                        var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, contentWorkflowProjectPath);
                         bool inAddedSection = false;
                         foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                         {
@@ -462,8 +467,8 @@ namespace CreateProjectOnline
         {
             if (unityVersion == Versions[0])
             {
-                var switchOutput = RunCmdWithOutput("cm switch main", contentWorkflowProjectPath);
-                var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
+                var switchOutput = RunCmdWithOutput(plasticCmdQuery.SwitchUnity2022, contentWorkflowProjectPath);
+                var statusOutput = RunCmdWithOutput(plasticCmdQuery.RefreshStatus, contentWorkflowProjectPath);
 
                 Debug.WriteLine($"Switch output: {switchOutput}");
                 //Debug.WriteLine($"Status output: {statusOutput}");
@@ -471,7 +476,7 @@ namespace CreateProjectOnline
             }
             else if (unityVersion == Versions[1])
             {
-                var switchOutput = RunCmdWithOutput("cm switch /main/UH-UnityUpgrade", contentWorkflowProjectPath);
+                var switchOutput = RunCmdWithOutput(plasticCmdQuery.SwitchUnity06, contentWorkflowProjectPath);
                 var statusOutput = RunCmdWithOutput("cm status --refresh", contentWorkflowProjectPath);
                 Debug.WriteLine($"Switch output: {switchOutput}");
                 //Debug.WriteLine($"Status output: {statusOutput}");
@@ -485,7 +490,7 @@ namespace CreateProjectOnline
             fullServerName = removeSpace + this.server;
 
             ///Create new repository
-            RunCmd($"cm mkrep {projectName}@{fullServerName}");
+            RunCmd($"{plasticCmdQuery.CreateRepository} {projectName}@{fullServerName}");
             Debug.WriteLine("Create Repository successfully");
         }
 
@@ -531,20 +536,20 @@ namespace CreateProjectOnline
 
         private async Task AddAndCheckinFilesInNewRepository()
         {
-            RunCmd($"cm mkworkspace {projectName} {projectLocation} {projectName}@{fullServerName}");
-            RunCmdWithOutput($"cm add . --recursive", projectLocation);
+            RunCmd($"{plasticCmdQuery.CreateWorkspace} {projectName} {projectLocation} {projectName}@{fullServerName}");
+            RunCmdWithOutput(plasticCmdQuery.AddFiles, projectLocation);
 
             if (unityVersion == Versions[0])
             {
                 if (isUndoChangeset)
                 {
                     Debug.WriteLine("Checkin from main latest changeset.");
-                    RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowMainLatest} changeset.\"", projectLocation);
+                    RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowMainLatest}", projectLocation);
                 }
                 else
                 {
                     Debug.WriteLine("Checkin from current latest changeset.");
-                    RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowCurrentChangeset} changeset.\"", projectLocation);
+                    RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowCurrentChangeset}", projectLocation);
                 }
             }
             else if (unityVersion == Versions[1])
@@ -552,19 +557,19 @@ namespace CreateProjectOnline
                 if (isUndoChangeset)
                 {
                     Debug.WriteLine("Checkin from Unity6 latest changeset.");
-                    RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowSixLatest} changeset.\"", projectLocation);
+                    RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowSixLatest}", projectLocation);
                 }
                 else
                 {
                     Debug.WriteLine("Checkin from current latest changeset.");
-                    RunCmdWithOutput($"cm checkin -m \"Get work from this {contentWorkflowCurrentChangeset} changeset.\"", projectLocation);
+                    RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowCurrentChangeset}", projectLocation);
                 }
             }
         }
 
         public string PlasticVersion()
         {
-            var output = RunCmdOut("cm version");
+            var output = RunCmdOut(plasticCmdQuery.PlasticVersion);
             Debug.WriteLine(output);
             return output;
         }
@@ -592,7 +597,7 @@ namespace CreateProjectOnline
 
         public bool IsPlasticLogedIn()
         {
-            var output = RunCmdOut("cm whoami");
+            var output = RunCmdOut(plasticCmdQuery.PlasticLogin);
             Debug.WriteLine(output);
             if (!string.IsNullOrEmpty(output))
             {
@@ -611,7 +616,7 @@ namespace CreateProjectOnline
         public void LoadDownloadedWorkspace()
         {
             downloadedWorkspaces.Clear();
-            var output = RunCmdWithOutput("cm workspace list");
+            var output = RunCmdWithOutput(plasticCmdQuery.DownloadWorkSpace);
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 //Debug.WriteLine("Workspace: " + line);
@@ -626,7 +631,7 @@ namespace CreateProjectOnline
         public void GetMainChangeset()
         {
             mainChangesets.Clear();
-            var output = RunCmdWithOutput("cm find changeset \"where branch='main'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
+            var output = RunCmdWithOutput(plasticCmdQuery.MainChangeset, contentWorkflowProjectPath);
             //Debug.WriteLine(output);
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -644,7 +649,7 @@ namespace CreateProjectOnline
         public void GetSixChangeset()
         {
             sixChangesets.Clear();
-            var output = RunCmdWithOutput("cm find changeset \"where branch='/main/UH-UnityUpgrade'\" --format=\"{changesetid}\"", contentWorkflowProjectPath);
+            var output = RunCmdWithOutput(plasticCmdQuery.UnityUpgradeChangeset, contentWorkflowProjectPath);
             //Debug.WriteLine(output);
 
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
@@ -668,7 +673,7 @@ namespace CreateProjectOnline
             }
             repositoryNames.Clear();
             var removeSpace = selectOrganization.Replace(" ", "");
-            var output = RunCmdOut($"cm repo list --server={removeSpace}{server}");
+            var output = RunCmdOut($"{plasticCmdQuery.Repository}{removeSpace}{server}");
             //var output = RunCmdOut($"cm repo list --server=LocLab_Consulting_GmbH@Cloud");
             Debug.WriteLine(output);
 
