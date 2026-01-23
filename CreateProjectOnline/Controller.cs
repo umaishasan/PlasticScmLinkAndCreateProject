@@ -473,6 +473,10 @@ namespace CreateProjectOnline
                 Debug.WriteLine($"Switch output: {switchOutput}");
                 //Debug.WriteLine($"Status output: {statusOutput}");
                 Debug.WriteLine("Switch to main latest successfully");
+                if (isErrorBool)
+                {
+                    MessageBox.Show("Switch to main latest successfully", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             else if (unityVersion == Versions[1])
             {
@@ -481,6 +485,10 @@ namespace CreateProjectOnline
                 Debug.WriteLine($"Switch output: {switchOutput}");
                 //Debug.WriteLine($"Status output: {statusOutput}");
                 Debug.WriteLine("Switch to main latest successfully");
+                if (isErrorBool)
+                {
+                    MessageBox.Show("Switch to Unity6 latest successfully", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 
@@ -491,6 +499,10 @@ namespace CreateProjectOnline
 
             ///Create new repository
             RunCmd($"{plasticCmdQuery.CreateRepository} {projectName}@{fullServerName}");
+            if (isErrorBool)
+            {
+                MessageBox.Show("Create Repository successfully", "Repository Create", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             Debug.WriteLine("Create Repository successfully");
         }
 
@@ -544,11 +556,19 @@ namespace CreateProjectOnline
                 if (isUndoChangeset)
                 {
                     Debug.WriteLine("Checkin from main latest changeset.");
+                    if(isErrorBool)
+                    {
+                        MessageBox.Show("Checkin from main latest changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowMainLatest}", projectLocation);
                 }
                 else
                 {
                     Debug.WriteLine("Checkin from current latest changeset.");
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Checkin from current changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowCurrentChangeset}", projectLocation);
                 }
             }
@@ -557,11 +577,19 @@ namespace CreateProjectOnline
                 if (isUndoChangeset)
                 {
                     Debug.WriteLine("Checkin from Unity6 latest changeset.");
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Checkin from Unity6 latest changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowSixLatest}", projectLocation);
                 }
                 else
                 {
                     Debug.WriteLine("Checkin from current latest changeset.");
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Checkin from current changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                     RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{contentWorkflowCurrentChangeset}", projectLocation);
                 }
             }
