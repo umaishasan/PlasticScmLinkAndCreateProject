@@ -109,29 +109,29 @@ namespace CreateProjectOnline
         {
             ///When Dth_Content_Workflow editor is not open
             
-            progress.Report(5);
+            progress.Report(10);
             comment = $"Check {templateProjectName} project downloaded or not.";
             CheckContentWorkflowDownloaded();
             IsContentWorkflowEditorOpen();
             
             if (istemplateProjectDownloaded && !isEditorOpen)
             {
-                progress.Report(5);
+                progress.Report(10);
                 comment = "Createing folder for new project.";
                 CreateFolderForNewProject();
-                progress.Report(20);
-                comment = $"Check {templateProjectName} current changeset number.";
-                CheckContentWorkflowChangeset();
-                progress.Report(5);
+                progress.Report(10);
                 comment = "Check pending changes.";
                 CheckPendingChanges();
-                progress.Report(5);
+                progress.Report(10);
                 comment = "Undo changeset.";
                 UndoChangeset();
                 progress.Report(10); //50
                 comment = unityVersion == Versions[0] ? "Switch to main's latest changeset." : "Switch to Unity6's latest changeset.";
                 SwitchToMainChangeset();
-                progress.Report(10);
+                progress.Report(5);
+                comment = $"Check {templateProjectName} current changeset number.";
+                CheckContentWorkflowChangeset();
+                progress.Report(5);
                 comment = "Create new repository for the new project.";
                 CreateNewRepository();
                 progress.Report(15);
@@ -209,109 +209,6 @@ namespace CreateProjectOnline
             if (isErrorBool)
             {
                 MessageBox.Show("Folder Creation for new project", "Folder Create", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        private void CheckContentWorkflowChangeset()
-        {
-            RunCmd($"cd \"{templateProjectPath}\"");
-            var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
-            var outputSplited = output.Split("@");
-            if (isErrorBool)
-            {
-                MessageBox.Show("Check Content_Workflow changeset", "Checking Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            ///unity 2022
-            if (unityVersion == Versions[0])
-            {
-                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
-                ///when you stand main latest changeset 
-                int templateProjectMainLatest = 0;
-                if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
-                {
-                    Debug.WriteLine("Already in main branch's latest changeset : " + output);
-                    templateProjectMainLatest = mainChangesets.LastOrDefault();
-                    templateProjectChangeset = templateProjectMainLatest.ToString();
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("Already main latest changeset", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    return;
-                }
-                ///when you stand main's previous changeset or another changeset
-                else
-                {
-                    ///when you stand 6's latest changeset
-                    int templateProjectCurrentChangeset = 0;
-                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
-                    {
-                        templateProjectCurrentChangeset = sixChangesets.LastOrDefault();
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Already 6 latest changeset: {templateProjectCurrentChangeset}", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                    ///when you stand another changeset
-                    else
-                    {
-                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                }
-            } 
-            ///unity 06
-            else if (unityVersion == Versions[1])
-            {
-                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
-                ///when you stand 6 latest changeset
-                int templateProjectSixLatest = 0;
-                if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
-                {                                  
-                    Debug.WriteLine("Already in 6 latest branch: " + output);
-                    templateProjectSixLatest = sixChangesets.LastOrDefault();
-                    templateProjectChangeset = templateProjectSixLatest.ToString();
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("Already 6 latest changeset", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    return;
-                }
-                ///when you stand 6's previous changeset or another changeset
-                else
-                {
-                    ///when you stand main's latest changeset
-                    int templateProjectCurrentChangeset = 0;
-                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
-                    {
-                        templateProjectCurrentChangeset = mainChangesets.LastOrDefault();
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Already Main latest changeset: {templateProjectCurrentChangeset}", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                    ///when you stand another changeset
-                    else
-                    {
-                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                }
             }
         }
 
@@ -572,6 +469,110 @@ namespace CreateProjectOnline
             }
         }
 
+        private void CheckContentWorkflowChangeset()
+        {
+            RunCmd($"cd \"{templateProjectPath}\"");
+            var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
+            var outputSplited = output.Split("@");
+            if (isErrorBool)
+            {
+                MessageBox.Show("Check Content_Workflow changeset", "Checking Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            ///unity 2022
+            if (unityVersion == Versions[0])
+            {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand main latest changeset 
+                int templateProjectMainLatest = 0;
+                if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
+                {
+                    Debug.WriteLine("Already in main branch's latest changeset : " + output);
+                    templateProjectMainLatest = mainChangesets.LastOrDefault();
+                    templateProjectChangeset = templateProjectMainLatest.ToString();
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Already main latest changeset", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    return;
+                }
+                ///when you stand main's previous changeset or another changeset
+                else
+                {
+                    ///when you stand 6's latest changeset
+                    int templateProjectCurrentChangeset = 0;
+                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
+                    {
+                        templateProjectCurrentChangeset = sixChangesets.LastOrDefault();
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Already 6 latest changeset: {templateProjectCurrentChangeset}", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                }
+            }
+            ///unity 06
+            else if (unityVersion == Versions[1])
+            {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand 6 latest changeset
+                int templateProjectSixLatest = 0;
+                if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
+                {
+                    Debug.WriteLine("Already in 6 latest branch: " + output);
+                    templateProjectSixLatest = sixChangesets.LastOrDefault();
+                    templateProjectChangeset = templateProjectSixLatest.ToString();
+                    if (isErrorBool)
+                    {
+                        MessageBox.Show("Already 6 latest changeset", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    return;
+                }
+                ///when you stand 6's previous changeset or another changeset
+                else
+                {
+                    ///when you stand main's latest changeset
+                    int templateProjectCurrentChangeset = 0;
+                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
+                    {
+                        templateProjectCurrentChangeset = mainChangesets.LastOrDefault();
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Already Main latest changeset: {templateProjectCurrentChangeset}", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        if (isErrorBool)
+                        {
+                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                }
+            }
+        }
+
+
         private void CreateNewRepository()
         {
             var removeSpace = selectOrganization.Replace(" ", "");
@@ -630,10 +631,15 @@ namespace CreateProjectOnline
         {
             if (isErrorBool)
             {
-                MessageBox.Show("AddAndCheckinFilesInNewRepository() Method", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"AddAndCheckinFilesInNewRepository() Project location {projectLocation} Method", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            RunCmd($"{plasticCmdQuery.CreateWorkspace} {projectName} {projectLocation} {projectName}@{fullServerName}");
+            RunCmdWithOutput($"{plasticCmdQuery.CreateWorkspace} {projectName} \"{projectLocation}\" {projectName}@{fullServerName}", projectLocation);
+            if (isErrorBool)
+            {
+                MessageBox.Show($"Project location {projectLocation} where checkin", "Checkin Folder Check", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             RunCmdWithOutput(plasticCmdQuery.AddFiles, projectLocation);
+
 
             if (unityVersion == Versions[0])
             {                
