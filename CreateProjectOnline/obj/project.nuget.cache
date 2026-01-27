@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "p0D9hPcHaa4=",
+  "dgSpecHash": "fA2QlwzV3gA=",
   "success": true,
   "projectFilePath": "D:\\@TLL_UDrive_Projects\\WPF\\PlasticScmLinkAndCreateProject\\CreateProjectOnline\\CreateProjectOnline.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Umais Hasan\\.nuget\\packages\\system.codedom\\10.0.2\\system.codedom.10.0.2.nupkg.sha512",
+    "C:\\Users\\Umais Hasan\\.nuget\\packages\\system.management\\10.0.2\\system.management.10.0.2.nupkg.sha512"
+  ],
   "logs": []
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CreateProjectOnline")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f891002d204264dcaee1a5ccf567c67c8ef9b817")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+929641011c12312f7ec0c4e0aaf5cab8603ce3ac")]
 [assembly: System.Reflection.AssemblyProductAttribute("CreateProjectOnline")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CreateProjectOnline")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

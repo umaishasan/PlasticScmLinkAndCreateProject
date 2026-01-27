@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
-
 using System.Management;
 
 namespace CreateProjectOnline
