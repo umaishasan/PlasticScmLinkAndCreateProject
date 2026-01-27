@@ -3,15 +3,14 @@
     class PlasticCmdQuery
     {
         private string workspaceList = "cm workspace list";
-        private string mainChangesetList = "cm find changeset \"where branch='main'\" --format=\"{changesetid}\"";
-        private string sixChangesetList = "cm find changeset \"where branch='/main/UH-UnityUpgrade'\" --format=\"{changesetid}\"";
+        private string mainBranch = "/main";
+        private string unityUpgradeBranch = "/main/UH-UnityUpgrade";
         private string repositoryList = "cm repo list --server=";
         private string statusHeader = "cm status --header";
+        private string statusShort = "cm status --short";
         private string undoAllChanges = "cm undo . -r";
         private string refreshChanges = "cm status --refresh";
         private string notDeductedFiles = "cm status --noheader";
-        private string switchToMain = "cm switch main";
-        private string switchToUnityUpgrade = "cm switch /main/UH-UnityUpgrade";
         private string repositoryMake = "cm mkrep";
         private string makeWorkspace = "cm mkworkspace";
         private string addFilesForPush = "cm add . --recursive";
@@ -24,13 +23,13 @@
         {
             get => workspaceList;
         }
-        public string MainChangeset
+        public string MainBranch
         {
-            get => mainChangesetList;
+            get => mainBranch;
         }
-        public string UnityUpgradeChangeset
+        public string UnityUpgradeBranch
         {
-            get => sixChangesetList;
+            get => unityUpgradeBranch;
         }
         public string Repository
         {
@@ -39,6 +38,10 @@
         public string Status
         {
             get => statusHeader;
+        }
+        public string CheckPendingChanges
+        {
+            get => statusShort;
         }
         public string UndoChanges
         {
@@ -51,15 +54,6 @@
         public string NotDeductedAddedFiles
         {
             get => notDeductedFiles;
-        }
-        public string SwitchUnity2022
-        {
-            get => switchToMain;
-        }
-        public string SwitchUnity06
-        {
-            get => switchToUnityUpgrade;
-
         }
         public string CreateRepository
         {
@@ -84,6 +78,18 @@
         public string PlasticLogin
         {
             get => plasticLogin;
+        }
+
+        public string FindChangesetsOfBranch(string branchName)
+        {
+            string ids = "\"{changesetid}\"";
+            string findChangesetCmd = $"cm find changeset \"where branch='{branchName}'\" --format={ids}";
+            return findChangesetCmd;
+        }
+        public string SwitchToBranch(string branchName)
+        {
+            string switchCmd = $"cm switch {branchName}";
+            return switchCmd;
         }
 
     }

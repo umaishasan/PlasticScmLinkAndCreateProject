@@ -2,6 +2,8 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Diagnostics;
+using System.IO;
+using Microsoft.Win32;
 
 namespace CreateProjectOnline
 {
@@ -15,6 +17,7 @@ namespace CreateProjectOnline
         private string selectVersion;
         private string projectName;
         private string projectLocation;
+        private string tempRepoName;
 
         public MainWindow()
         {
@@ -24,6 +27,7 @@ namespace CreateProjectOnline
             _controller.IsPlasticLogedIn();
             SelectOrganizationDdItem.Content = _controller.GetOrganization();
             _controller.LoadDownloadedWorkspace();
+            CheckDebugMode();
         }
 
         private async void CreateProject(object sender, RoutedEventArgs e)
@@ -56,7 +60,7 @@ namespace CreateProjectOnline
                 ProgressBarComment.Content = _controller.CommentComplete();
                 ProgressColorValidate();
                 ProgressBarComment2.Visibility = Visibility.Collapsed;
-                //await _controller.DelayShutdown(5000);
+                await _controller.DelayShutdown(5000);
             }
         }
 
@@ -80,7 +84,7 @@ namespace CreateProjectOnline
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
             // Corrected code: OpenFolderDialog does not support 'Filter'. Removed the invalid property.  
-            var dialog = new Microsoft.Win32.OpenFolderDialog
+            var dialog = new OpenFolderDialog
             {
                 Title = "Select the project folder"
             };
@@ -105,6 +109,7 @@ namespace CreateProjectOnline
                 projectName = textBox.Text;
                 _controller.NewProjectName = projectName;
                 ProjectNameValidation(projectName);
+                FolderExistsValidation();
                 Debug.WriteLine($"Project Name: {projectName}");
             }
             UpdateCreateButtonState();
@@ -112,6 +117,8 @@ namespace CreateProjectOnline
 
         private void ProjectLocationTxt_TextChanged(object sender, TextChangedEventArgs e)
         {
+            ProjectNameValidation(projectName);
+            FolderExistsValidation();
             UpdateCreateButtonState();
         }
 
@@ -138,8 +145,9 @@ namespace CreateProjectOnline
             CreateButton.IsEnabled =
                 !string.IsNullOrWhiteSpace(selectOrganization) &&
                 !string.IsNullOrWhiteSpace(projectName) &&
-                !string.IsNullOrWhiteSpace(projectLocation)&&
-                !ProjectNameValidate.Content.Equals("Project name already exist.");
+                !string.IsNullOrWhiteSpace(projectLocation) &&
+                !(ProjectNameValidate.Content.Equals("Project already exist in PlasticSCM") ||
+                ProjectNameValidate.Content.Equals("Folder already exists"));
         }
 
         private void ProjectNameValidation(string projectName)
@@ -151,16 +159,63 @@ namespace CreateProjectOnline
                     ProjectNameValidate.Content = "";
                     continue;
                 }
-                ProjectNameValidate.Content = "Project name already exist.";
-                break;
+                else
+                {
+                    ProjectNameValidate.Content = "Project already exist in PlasticSCM";
+                    tempRepoName = repoName;
+                    break;
+                }
+            }
+        }
+
+        private void FolderExistsValidation()
+        {
+            if (string.IsNullOrEmpty(projectLocation) || string.IsNullOrEmpty(projectName))
+            {
+                return;
+            }
+
+            string fullPath = Path.Combine(projectLocation, projectName);
+            bool folderExists = Directory.Exists(fullPath);
+
+            if (folderExists)
+            {
+                if (projectName == tempRepoName)
+                {
+                    ProjectNameValidate.Content = "Project already exist in PlasticSCM";
+                }
+                else
+                {
+                    ProjectNameValidate.Content = "Folder already exists";
+                }
+            }
+            else
+            {
+                // Only clear if not already set by ProjectNameValidation
+                if (ProjectNameValidate.Content?.ToString() == "Folder already exists")
+                {
+                    ProjectNameValidate.Content = "";
+                }
             }
         }
 
         private void ProgressColorValidate()
         {
-            if (!_controller.isContentWorkflowDownloaded)
+            if (!_controller.IsProjectDownloaded || _controller.AlreadyEditorOpen)
             {
                 OperationProgressBar.Foreground = new SolidColorBrush(Colors.Red);
+            }
+        }
+
+        private void CheckDebugMode()
+        {
+            if (_controller.CheckError) 
+            {
+                DebugMode.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                DebugMode.Visibility = Visibility.Collapsed;
             }
         }
 

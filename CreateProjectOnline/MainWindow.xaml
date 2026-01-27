@@ -34,5 +34,6 @@
             <ComboBoxItem Content="Unity 06"/>
         </ComboBox>
         <Label Content="Unity Version" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="131,97,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label x:Name="DebugMode" Content="Debug Mode" HorizontalAlignment="Left" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10" Foreground="Red" Grid.Column="1" Margin="548,323,0,0" Width="69"/>
     </Grid>
 </Window>
