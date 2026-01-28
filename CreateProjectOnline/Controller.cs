@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Management;
+using System;
 
 namespace CreateProjectOnline
 {
@@ -152,10 +153,7 @@ namespace CreateProjectOnline
 
         private void CheckContentWorkflowDownloaded()
         {
-            if (isErrorBool)
-            {
-                MessageBox.Show($"Checking {templateProjectName} project downloaded or not.", "Checking", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Checking whether the project has been downloaded or not.", "Workspace Downloaded", MessageBoxImage.Information);
             bool found = istemplateProjectDownloaded = false;
             foreach (var line in downloadedWorkspaces)
             {
@@ -170,10 +168,7 @@ namespace CreateProjectOnline
                     string pathContentWorkflow = pathSplited;
                     templateProjectPathDirective = directiveSplited;
                     templateProjectPath = templateProjectPathDirective + ":" + pathContentWorkflow;
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"ProjectName: {templateProject}, ProjectPath: {templateProjectPath}", "Project Found!", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup($"ProjectName: {templateProject}, ProjectPath: {templateProjectPath}", "Project Found!", MessageBoxImage.Information);
                     found = istemplateProjectDownloaded = true;
                     Debug.WriteLine($"Is this same: {nameSplited[0]} or {templateProject}");
                     Debug.WriteLine($"Project path: {pathSplited} or {templateProjectPath}");
@@ -183,8 +178,7 @@ namespace CreateProjectOnline
             if (!found)
             {
                 istemplateProjectDownloaded = false;
-                var result = MessageBox.Show($"The {templateProjectName} project is not downloaded. Please download the latest version from main.", $"{templateProjectName} Not Found",MessageBoxButton.OK,MessageBoxImage.Warning);                
-                
+                var result = DebugPopup($"The project is not downloaded. Please download the latest version from main.", "Project Not Found!", MessageBoxImage.Warning);
                 if(result == MessageBoxResult.OK)
                 {
                     Debug.WriteLine("Is this main window close ? "+result);
@@ -206,34 +200,22 @@ namespace CreateProjectOnline
                     projectLocation = projectPath;
                 }
             }
-            if (isErrorBool)
-            {
-                MessageBox.Show("Folder Creation for new project", "Folder Create", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Creating folder for new project.", "Folder Creation", MessageBoxImage.Information);
         }
 
         private void CheckPendingChanges()
         {
             var result = RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
-            if(isErrorBool)
-            {
-                MessageBox.Show("Now You are in CheckPendingChanges method", "Check Pending Changes", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Checking pending changes in the project.", "Check Pending Changes", MessageBoxImage.Information);
             if (string.IsNullOrEmpty(result))
             {
-                if (isErrorBool)
-                {
-                    MessageBox.Show("No pending changes found.", "Check Pending Changes", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                DebugPopup("No pending changes found.", "Check Pending Changes", MessageBoxImage.Information);
                 isTherePendingChanges = false;
                 Debug.WriteLine("No pending changes found. "+ isTherePendingChanges);
             }
             else
             {
-                if (isErrorBool)
-                {
-                    MessageBox.Show("Pending changes exist.", "Check Pending Changes", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                DebugPopup("Pending changes exist in the project.", "Check Pending Changes", MessageBoxImage.Information);
                 isTherePendingChanges = true;
                 Debug.WriteLine("Pending changes exist. "+ isTherePendingChanges);
             }
@@ -241,10 +223,7 @@ namespace CreateProjectOnline
 
         private void UndoChangeset()
         {
-            if (isErrorBool)
-            {
-                MessageBox.Show("Now You are in Undo method", "Undo Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Undoing changeset if there are pending changes.", "Undo Changeset", MessageBoxImage.Information);
             ///Unity 2022
             if (unityVersion == Versions[0])
             {
@@ -252,19 +231,14 @@ namespace CreateProjectOnline
                 ///check current changeset and main latest changeset not equal then undo
                 if (isTherePendingChanges)
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"isTherePendingChanges: {isTherePendingChanges}", "Pending Changes Avail", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
                     ///undo all changes
-                    var result = MessageBox.Show($"The current changeset of {templateProjectName} will undo all the work.", "Undo changeset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
                         RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
                         RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
                         Debug.WriteLine($"Undo all changes: ");
-
                         // Find and delete all files in "Added" state
                         var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, templateProjectPath);
                         bool inAddedSection = false;
@@ -313,19 +287,13 @@ namespace CreateProjectOnline
                     }
                     else
                     {
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show("You select 'No' from undo popup", "Do not Undo", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                        DebugPopup("Your work was not undone.", "Pending Changes Available", MessageBoxImage.Information);
                         Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
                     }
                 }
                 else
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"isTherePendingChanges: False", "Pending Changes Avail", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
                     return;
                 }
             }
@@ -336,18 +304,13 @@ namespace CreateProjectOnline
                 ///undo all changes
                 if (isTherePendingChanges)
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"isTherePendingChanges: {isTherePendingChanges}", "Pending Changes Avail", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    var result = MessageBox.Show($"The current changeset of {templateProjectName} will undo all the work.", "Undo changeset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
                         RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
                         RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
                         Debug.WriteLine($"Undo all changes: ");
-
                         // Find and delete all files in "Added" state
                         var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, templateProjectPath);
                         bool inAddedSection = false;
@@ -359,7 +322,6 @@ namespace CreateProjectOnline
                                 inAddedSection = true;
                                 continue;
                             }
-
                             //Debug.WriteLine("----------> Processing line: " + trimmed);
                             if (inAddedSection && trimmed.StartsWith("Private"))
                             {
@@ -396,19 +358,13 @@ namespace CreateProjectOnline
                     }
                     else
                     {
+                        DebugPopup("Your work was not undone.", "Pending Changes Available", MessageBoxImage.Information);
                         Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show("You select 'No' from undo popup", "Do not Undo", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
                     }
                 }
                 else
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"isTherePendingChanges: False", "Pending Changes Avail", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
                     return;
                 }
             }
@@ -422,23 +378,16 @@ namespace CreateProjectOnline
                                     (isTherePendingChanges == true && isUndoChangeset == true);
                 if(checkPending)
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"checkPending bool => {checkPending}", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("Switching to main's latest changeset.", "Switch Changeset", MessageBoxImage.Information);
                     var switchOutput = RunCmdWithOutput(plasticCmdQuery.SwitchToBranch(plasticCmdQuery.MainBranch), templateProjectPath);
                     var statusOutput = RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
-
                     //Debug.WriteLine($"Switch output: {switchOutput}");
                     //Debug.WriteLine($"Status output: {statusOutput}");
                     Debug.WriteLine("Switch successfully");
                 }
                 else if(isTherePendingChanges == true && isUndoChangeset == false)
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("checkPending false: ", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("Cannot switch due to pending changes not undone.", "Switch Changeset", MessageBoxImage.Information);
                     return;
                 }
             }
@@ -448,10 +397,7 @@ namespace CreateProjectOnline
                                     (isTherePendingChanges == true && isUndoChangeset == true);
                 if (checkPending)
                 {
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show($"checkPending bool => {checkPending}", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("Switching to 6's latest changeset.", "Switch Changeset", MessageBoxImage.Information);
                     var switchOutput = RunCmdWithOutput(plasticCmdQuery.SwitchToBranch(plasticCmdQuery.UnityUpgradeBranch), templateProjectPath);
                     var statusOutput = RunCmdWithOutput("cm status --refresh", templateProjectPath);
                     //Debug.WriteLine($"Switch output: {switchOutput}");
@@ -459,11 +405,8 @@ namespace CreateProjectOnline
                     Debug.WriteLine("Switch to main latest successfully");
                 }
                 else if (isTherePendingChanges == true && isUndoChangeset == false)
-                {      
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("checkPending false: ", "Switch Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                {
+                    DebugPopup("Cannot switch due to pending changes not undone.", "Switch Changeset", MessageBoxImage.Information);
                     return;
                 }
             }
@@ -474,10 +417,7 @@ namespace CreateProjectOnline
             RunCmd($"cd \"{templateProjectPath}\"");
             var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
             var outputSplited = output.Split("@");
-            if (isErrorBool)
-            {
-                MessageBox.Show("Check Content_Workflow changeset", "Checking Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Checking current changeset number of the project.", "Checking Changeset", MessageBoxImage.Information);
             ///unity 2022
             if (unityVersion == Versions[0])
             {
@@ -489,10 +429,7 @@ namespace CreateProjectOnline
                     Debug.WriteLine("Already in main branch's latest changeset : " + output);
                     templateProjectMainLatest = mainChangesets.LastOrDefault();
                     templateProjectChangeset = templateProjectMainLatest.ToString();
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("Already main latest changeset", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
                     return;
                 }
                 ///when you stand main's previous changeset or another changeset
@@ -504,10 +441,7 @@ namespace CreateProjectOnline
                     {
                         templateProjectCurrentChangeset = sixChangesets.LastOrDefault();
                         templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Already 6 latest changeset: {templateProjectCurrentChangeset}", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                        DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
                         Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
                     }
                     ///when you stand another changeset
@@ -516,10 +450,7 @@ namespace CreateProjectOnline
                         var lastOutput = outputSplited.FirstOrDefault().Split(':');
                         templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
                         templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
                         Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
                     }
                 }
@@ -535,10 +466,7 @@ namespace CreateProjectOnline
                     Debug.WriteLine("Already in 6 latest branch: " + output);
                     templateProjectSixLatest = sixChangesets.LastOrDefault();
                     templateProjectChangeset = templateProjectSixLatest.ToString();
-                    if (isErrorBool)
-                    {
-                        MessageBox.Show("Already 6 latest changeset", "Stand In UnityUpgrade Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
                     return;
                 }
                 ///when you stand 6's previous changeset or another changeset
@@ -550,10 +478,7 @@ namespace CreateProjectOnline
                     {
                         templateProjectCurrentChangeset = mainChangesets.LastOrDefault();
                         templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Already Main latest changeset: {templateProjectCurrentChangeset}", "Stand In Main Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                        DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
                         Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
                     }
                     ///when you stand another changeset
@@ -562,28 +487,20 @@ namespace CreateProjectOnline
                         var lastOutput = outputSplited.FirstOrDefault().Split(':');
                         templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
                         templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        if (isErrorBool)
-                        {
-                            MessageBox.Show($"Current changeset: {templateProjectCurrentChangeset}", "Stand Another Branch", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
                         Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
                     }
                 }
             }
         }
 
-
         private void CreateNewRepository()
         {
             var removeSpace = selectOrganization.Replace(" ", "");
             fullServerName = removeSpace + this.server;
-
             ///Create new repository
             RunCmd($"{plasticCmdQuery.CreateRepository} {projectName}@{fullServerName}");
-            if (isErrorBool)
-            {
-                MessageBox.Show("Create Repository successfully", "Repository Create", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Creating new repository for the new project.", "Repository Creation", MessageBoxImage.Information);
             Debug.WriteLine("Create Repository successfully");
         }
 
@@ -629,33 +546,18 @@ namespace CreateProjectOnline
 
         private async Task AddAndCheckinFilesInNewRepository()
         {
-            if (isErrorBool)
-            {
-                MessageBox.Show($"AddAndCheckinFilesInNewRepository() Project location {projectLocation} Method", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Adding and Checking (push) files to new repository.", "Checkin", MessageBoxImage.Information);
             RunCmdWithOutput($"{plasticCmdQuery.CreateWorkspace} {projectName} \"{projectLocation}\" {projectName}@{fullServerName}", projectLocation);
-            if (isErrorBool)
-            {
-                MessageBox.Show($"Project location {projectLocation} where checkin", "Checkin Folder Check", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
             RunCmdWithOutput(plasticCmdQuery.AddFiles, projectLocation);
-
-
             if (unityVersion == Versions[0])
-            {                
-                if(isErrorBool)
-                {
-                    MessageBox.Show("Checkin from main latest changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+            {   
+                DebugPopup("Checkin from main latest changeset.", "Checkin", MessageBoxImage.Information);
                 RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{templateProjectChangeset}", projectLocation);
                 Debug.WriteLine("Checkin from main latest changeset.");
             }
             else if (unityVersion == Versions[1])
             {
-                if (isErrorBool)
-                {
-                    MessageBox.Show("Checkin from 6 changeset", "Checkin", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                DebugPopup("Checkin from main latest changeset.", "Checkin", MessageBoxImage.Information);
                 RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{templateProjectChangeset}", projectLocation);
                 Debug.WriteLine("Checkin from 6 latest changeset.");
             }
@@ -698,17 +600,14 @@ namespace CreateProjectOnline
                 Debug.WriteLine("Already loged in plasticscm: " + output);
                 return true;
             }
-            MessageBox.Show("You are not logged in to Plastic SCM. Please log in and try again.", "Not Logged In", MessageBoxButton.OK, MessageBoxImage.Warning);
+            DebugPopup("You are not logged in to Plastic SCM. Please log in and try again.", "Not Logged In", MessageBoxImage.Warning);
             MainWindow.GetWindow(Application.Current.MainWindow).Close();
             return false;
         }
 
         public void IsContentWorkflowEditorOpen()
         {
-            if(isErrorBool)
-            {
-                MessageBox.Show($"IsContentWorkflowEditorOpen() method.", "Checking Editor", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Checking whether the DTH_Content_Workflow editor is open or not.", "Checking Editor Open", MessageBoxImage.Information);
             if (!string.IsNullOrEmpty(templateProjectPath))
             {
                 // Check both possible lockfile locations
@@ -732,15 +631,13 @@ namespace CreateProjectOnline
                     }
                     catch (Exception ex)
                     {
-                        /* Ignore access denied */
-                        MessageBox.Show("" + ex.Message, "Unknown Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                        DebugPopup("" + ex.Message, "Unknown Error!", MessageBoxImage.Error);
                     }
                 }
-
                 if (lockFileExists || unityProcessOpen)
                 {
                     isEditorOpen = true;
-                    MessageBox.Show($"Please close {templateProjectName} Unity editor before creating the project.","Unity Editor Open",MessageBoxButton.OK,MessageBoxImage.Warning);
+                    DebugPopup($"Please close {templateProjectName} Unity editor before creating the project.", "Unity Editor Open", MessageBoxImage.Warning);
                     return;
                 }
                 else
@@ -754,6 +651,27 @@ namespace CreateProjectOnline
 
         #region CommonMethod
 
+        public MessageBoxResult DebugPopup(string message, string caption, MessageBoxImage messageBoxImage, MessageBoxButton MessageBoxButton = MessageBoxButton.OK)
+        {
+            var result = MessageBoxResult.None;
+            if (isErrorBool)
+            {
+                if(messageBoxImage == MessageBoxImage.Error)
+                {
+                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else if (messageBoxImage == MessageBoxImage.Warning)
+                {
+                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else if(messageBoxImage == MessageBoxImage.Information)
+                {
+                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            return result;
+        }
+
         public void LoadDownloadedWorkspace()
         {
             downloadedWorkspaces.Clear();
@@ -763,10 +681,7 @@ namespace CreateProjectOnline
                 //Debug.WriteLine("Workspace: " + line);
                 downloadedWorkspaces.Add(line);
             }
-            if (isErrorBool)
-            {
-                MessageBox.Show("You are in LoadDownloadedWorkspace method", "Getting Downloaded Workspace", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Loading downloaded workspaces.", "Loading Workspace", MessageBoxImage.Information);
         }
 
         public void GetMainChangeset()
@@ -781,10 +696,7 @@ namespace CreateProjectOnline
                     mainChangesets.Add(id);
                 }
             }
-            if (isErrorBool)
-            {
-                MessageBox.Show("You are in GetMainChangeset method", "Getting Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Getting changesets from main branch", "Getting Changesets", MessageBoxImage.Information);
         }
 
         public void GetSixChangeset()
@@ -792,7 +704,6 @@ namespace CreateProjectOnline
             sixChangesets.Clear();
             var output = RunCmdWithOutput(plasticCmdQuery.FindChangesetsOfBranch(plasticCmdQuery.UnityUpgradeBranch), templateProjectPath);
             Debug.WriteLine("GetSixChangeset()" + output);
-
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (int.TryParse(line.Trim(), out int id))
@@ -800,24 +711,17 @@ namespace CreateProjectOnline
                     sixChangesets.Add(id);
                 }
             }
-            if (isErrorBool)
-            {
-                MessageBox.Show("You are in GetSixChangeset method", "Getting Changeset", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Getting changesets from unity 6 branch", "Getting Changesets", MessageBoxImage.Information);
         }
 
         public void GetAllRepo()
         {
-            if (isErrorBool)
-            {
-                MessageBox.Show("You are in getting repository method", "Getting Repository", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            DebugPopup("Getting all repositories from the selected organization.", "Getting Repository", MessageBoxImage.Information);
             repositoryNames.Clear();
             var removeSpace = selectOrganization.Replace(" ", "");
             var output = RunCmdOut($"{plasticCmdQuery.Repository}{removeSpace}{server}");
             //var output = RunCmdOut($"cm repo list --server=LocLab_Consulting_GmbH@Cloud");
             Debug.WriteLine(output);
-
             foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var repoName = line.Split('@').FirstOrDefault();
@@ -932,7 +836,7 @@ namespace CreateProjectOnline
             }
             catch (Exception ex) 
             {
-                MessageBox.Show("" + ex.Message, "Unknown Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                DebugPopup ("" + ex.Message, "Unknown Error!", MessageBoxImage.Error);
             }
             return null;
         }

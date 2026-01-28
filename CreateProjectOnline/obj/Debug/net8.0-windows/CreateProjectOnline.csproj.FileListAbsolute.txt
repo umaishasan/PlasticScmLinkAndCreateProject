@@ -39,3 +39,9 @@ D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\o
 D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\CreateProjectOnline.pdb
 D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\CreateProjectOnline.genruntimeconfig.cache
 D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\ref\CreateProjectOnline.dll
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\bin\Debug\net8.0-windows\System.CodeDom.dll
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\bin\Debug\net8.0-windows\System.Management.dll
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\CreateProjectOnline.csproj.AssemblyReference.cache
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\CreatePr.2642C52D.Up2Date
+D:\@TLL_UDrive_Projects\WPF\PlasticScmLinkAndCreateProject\CreateProjectOnline\obj\Debug\net8.0-windows\CreateProjectOnline_Content.g.cs

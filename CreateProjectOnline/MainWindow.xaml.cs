@@ -50,7 +50,7 @@ namespace CreateProjectOnline
             }
             catch (Exception ex)
             {
-                MessageBox.Show("" + ex.Message, "Unknown Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                _controller.DebugPopup ("" + ex.Message, "Unknown Error!", MessageBoxImage.Error);
             }
             finally
             {
