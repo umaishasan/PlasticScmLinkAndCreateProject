@@ -21,16 +21,17 @@ namespace CreateProjectOnline
         private string templateProjectChangeset;
 
         private bool isUndoChangeset = false;
+        private bool isUndoRestriction = false;
         private bool istemplateProjectDownloaded;
         private bool isTherePendingChanges = false;
         private bool isEditorOpen = false;
         private bool isErrorBool = true;
 
         public string[] Versions = { " Unity 2022", " Unity 06" };
-        public List<string> downloadedWorkspaces = new();
-        public static List<string> repositoryNames = new();
-        public List<int> mainChangesets = new();
-        public List<int> sixChangesets = new();
+        public List<string> downloadedWorkspaces = new List<string>();
+        public static List<string> repositoryNames = new List<string>();
+        public List<int> mainChangesets = new List<int>();
+        public List<int> sixChangesets = new List<int>();
 
         private string selectOrganization;
         private string projectName;
@@ -101,6 +102,14 @@ namespace CreateProjectOnline
             set
             {
                 isEditorOpen = value;
+            }
+        }
+        public bool UndoRestriction
+        {
+            get => isUndoRestriction;
+            set
+            {
+                isUndoRestriction = value;
             }
         }
 
@@ -223,83 +232,63 @@ namespace CreateProjectOnline
 
         private void UndoChangeset()
         {
+            RunCmd($"cd \"{templateProjectPath}\"");
+            var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
+            var outputSplited = output.Split("@");
+            var lastOutput = outputSplited.FirstOrDefault().Split(':');
+            var getHead = outputSplited.LastOrDefault().Split('(').LastOrDefault().Split('-').FirstOrDefault().Split(':');
             DebugPopup("Undoing changeset if there are pending changes.", "Undo Changeset", MessageBoxImage.Information);
             ///Unity 2022
             if (unityVersion == Versions[0])
             {
+                var whenStringComeForMain = lastOutput[0] == plasticCmdQuery.UnityUpgradeBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
+                int resultOutput = whenStringComeForMain;
                 Debug.WriteLine("Unity version: " + unityVersion);
                 ///check current changeset and main latest changeset not equal then undo
                 if (isTherePendingChanges)
                 {
-                    ///undo all changes
                     var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
-                        RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
-                        RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
-                        Debug.WriteLine($"Undo all changes: ");
-                        // Find and delete all files in "Added" state
-                        var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, templateProjectPath);
-                        bool inAddedSection = false;
-                        foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            var trimmed = line.Trim();
-                            if (trimmed.Equals("Added", StringComparison.OrdinalIgnoreCase))
-                            {
-                                inAddedSection = true;
-                                continue;
-                            }
-
-                            //Debug.WriteLine("----------> Processing line: " + trimmed);
-                            if (inAddedSection && trimmed.StartsWith("Private"))
-                            {
-                                var parts = trimmed.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Length > 0)
-                                {
-                                    var assetPath = trimmed.Split("Assets").LastOrDefault();
-                                    var fullPath = Path.Combine(templateProjectPath, "Assets" + assetPath);
-                                    try
-                                    {
-                                        //Debug.WriteLine("Full path to delete: " + fullPath);
-                                        if (File.Exists(fullPath))
-                                        {
-                                            File.Delete(fullPath);
-                                            Debug.WriteLine($"Deleted added file: {fullPath}");
-                                        }
-                                        if (Directory.Exists(fullPath))
-                                        {
-                                            Directory.Delete(fullPath, true);
-                                            Debug.WriteLine($"Deleted added directory: {fullPath}");
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
-                                        if (isErrorBool)
-                                        {
-                                            MessageBox.Show("Failed to delete " + fullPath + ": " + ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        UndoWork();
                     }
                     else
                     {
-                        DebugPopup("Your work was not undone.", "Pending Changes Available", MessageBoxImage.Information);
-                        Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
+                        foreach (var item in sixChangesets)
+                        {
+                            Debug.WriteLine($"changesets count: {sixChangesets.Count}");
+                            //Debug.WriteLine($"changesets: {item}");
+                            if (item == resultOutput)
+                            {
+                                var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity6 to Unity2022 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                                isUndoChangeset = (result2 == MessageBoxResult.Yes);
+                                if (isUndoChangeset)
+                                {
+                                    UndoWork();
+                                }
+                                else
+                                {
+                                    isUndoRestriction = true;
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
+                            }
+                        }
                     }
                 }
                 else
                 {
                     DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
-                    return;
                 }
             }
             ///Unity 06
             else if (unityVersion == Versions[1])
             {
+                var whenStringComeFor6 = lastOutput[0] == plasticCmdQuery.MainBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
+                int resultOutput = whenStringComeFor6;
                 Debug.WriteLine("Unity version: " + unityVersion);
                 ///undo all changes
                 if (isTherePendingChanges)
@@ -308,64 +297,88 @@ namespace CreateProjectOnline
                     isUndoChangeset = (result == MessageBoxResult.Yes);
                     if (isUndoChangeset)
                     {
-                        RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
-                        RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
-                        Debug.WriteLine($"Undo all changes: ");
-                        // Find and delete all files in "Added" state
-                        var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, templateProjectPath);
-                        bool inAddedSection = false;
-                        foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            var trimmed = line.Trim();
-                            if (trimmed.Equals("Added", StringComparison.OrdinalIgnoreCase))
-                            {
-                                inAddedSection = true;
-                                continue;
-                            }
-                            //Debug.WriteLine("----------> Processing line: " + trimmed);
-                            if (inAddedSection && trimmed.StartsWith("Private"))
-                            {
-                                var parts = trimmed.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Length > 0)
-                                {
-                                    var assetPath = trimmed.Split("Assets").LastOrDefault();
-                                    var fullPath = Path.Combine(templateProjectPath, "Assets" + assetPath);
-                                    try
-                                    {
-                                        //Debug.WriteLine("Full path to delete: " + fullPath);
-                                        if (File.Exists(fullPath))
-                                        {
-                                            File.Delete(fullPath);
-                                            Debug.WriteLine($"Deleted added file: {fullPath}");
-                                        }
-                                        if (Directory.Exists(fullPath))
-                                        {
-                                            Directory.Delete(fullPath, true);
-                                            Debug.WriteLine($"Deleted added directory: {fullPath}");
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
-                                        if (isErrorBool)
-                                        {
-                                            MessageBox.Show("Failed to delete " + fullPath + ": " + ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        UndoWork();
                     }
                     else
                     {
-                        DebugPopup("Your work was not undone.", "Pending Changes Available", MessageBoxImage.Information);
-                        Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
+                        foreach (var item in mainChangesets)
+                        {
+                            Debug.WriteLine($"changesets count: {mainChangesets.Count}");
+                            //Debug.WriteLine($"changesets: {item}");
+                            if (item == resultOutput)
+                            {
+                                var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity2022 to Unity6 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                                isUndoChangeset = (result2 == MessageBoxResult.Yes);
+                                if (isUndoChangeset)
+                                {
+                                    UndoWork();
+                                }
+                                else
+                                {
+                                    isUndoRestriction = true;
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
+                            }
+                        }
                     }
                 }
                 else
                 {
                     DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
-                    return;
+                }
+            }
+        }
+
+        private void UndoWork()
+        {
+            RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
+            RunCmdWithOutput(plasticCmdQuery.RefreshStatus, templateProjectPath);
+            Debug.WriteLine($"Undo all changes: ");
+            // Find and delete all files in "Added" state
+            var statusOutput = RunCmdWithOutput(plasticCmdQuery.NotDeductedAddedFiles, templateProjectPath);
+            bool inAddedSection = false;
+            foreach (var line in statusOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmed = line.Trim();
+                if (trimmed.Equals("Added", StringComparison.OrdinalIgnoreCase))
+                {
+                    inAddedSection = true;
+                    continue;
+                }
+                //Debug.WriteLine("----------> Processing line: " + trimmed);
+                if (inAddedSection && trimmed.StartsWith("Private"))
+                {
+                    var parts = trimmed.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length > 0)
+                    {
+                        var assetPath = trimmed.Split("Assets").LastOrDefault();
+                        var fullPath = Path.Combine(templateProjectPath, "Assets" + assetPath);
+                        try
+                        {
+                            //Debug.WriteLine("Full path to delete: " + fullPath);
+                            if (File.Exists(fullPath))
+                            {
+                                File.Delete(fullPath);
+                                Debug.WriteLine($"Deleted added file: {fullPath}");
+                            }
+                            if (Directory.Exists(fullPath))
+                            {
+                                Directory.Delete(fullPath, true);
+                                Debug.WriteLine($"Deleted added directory: {fullPath}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Failed to delete {fullPath}: {ex.Message}");
+                            if (isErrorBool)
+                            {
+                                MessageBox.Show("Failed to delete " + fullPath + ": " + ex.Message, "Deletion Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -658,15 +671,15 @@ namespace CreateProjectOnline
             {
                 if(messageBoxImage == MessageBoxImage.Error)
                 {
-                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
+                    result = MessageBox.Show(message, caption, MessageBoxButton, MessageBoxImage.Error);
                 }
                 else if (messageBoxImage == MessageBoxImage.Warning)
                 {
-                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    result = MessageBox.Show(message, caption, MessageBoxButton, MessageBoxImage.Warning);
                 }
                 else if(messageBoxImage == MessageBoxImage.Information)
                 {
-                    result = MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
+                    result = MessageBox.Show(message, caption, MessageBoxButton, MessageBoxImage.Information);
                 }
             }
             return result;
@@ -739,14 +752,17 @@ namespace CreateProjectOnline
         public string CommentComplete()
         {
             string complete = "";
-
             if (isEditorOpen)
             {
                 complete = "Operation Failed!";
             }
             else
             {
-                if (istemplateProjectDownloaded)
+                if (isUndoRestriction && istemplateProjectDownloaded)
+                {
+                    complete = "Operation Failed!";
+                }
+                if (istemplateProjectDownloaded && !isUndoRestriction)
                 {
                     complete = "Completed!";
                 }
