@@ -118,7 +118,7 @@ namespace CreateProjectOnline
         public async Task CreateProjectOnline(IProgress<int> progress)
         {
             ///When Dth_Content_Workflow editor is not open
-            
+            LoadDownloadedWorkspace();
             progress.Report(10);
             comment = $"Check {templateProjectName} project downloaded or not.";
             CheckContentWorkflowDownloaded();
@@ -215,18 +215,21 @@ namespace CreateProjectOnline
         private void CheckPendingChanges()
         {
             var result = RunCmdWithOutput(plasticCmdQuery.UndoChanges, templateProjectPath);
+            var result2 = RunCmdWithOutput(plasticCmdQuery.CheckPendingChanges, templateProjectPath);
             DebugPopup("Checking pending changes in the project.", "Check Pending Changes", MessageBoxImage.Information);
-            if (string.IsNullOrEmpty(result))
-            {
-                DebugPopup("No pending changes found.", "Check Pending Changes", MessageBoxImage.Information);
-                isTherePendingChanges = false;
-                Debug.WriteLine("No pending changes found. "+ isTherePendingChanges);
-            }
-            else
+            bool resultForAll = string.IsNullOrEmpty(result);
+            bool resultForAdded = string.IsNullOrEmpty(result2);
+            if (!resultForAll || !resultForAdded)
             {
                 DebugPopup("Pending changes exist in the project.", "Check Pending Changes", MessageBoxImage.Information);
                 isTherePendingChanges = true;
-                Debug.WriteLine("Pending changes exist. "+ isTherePendingChanges);
+                Debug.WriteLine("Pending changes exist. " + isTherePendingChanges);
+            }
+            else
+            {
+                DebugPopup("No pending changes found.", "Check Pending Changes", MessageBoxImage.Information);
+                isTherePendingChanges = false;
+                Debug.WriteLine("No pending changes found. " + isTherePendingChanges);
             }
         }
 
@@ -559,7 +562,7 @@ namespace CreateProjectOnline
 
         private async Task AddAndCheckinFilesInNewRepository()
         {
-            DebugPopup("Adding and Checking (push) files to new repository.", "Checkin", MessageBoxImage.Information);
+            DebugPopup("Adding and Checkin (push) files to new repository.", "Checkin", MessageBoxImage.Information);
             RunCmdWithOutput($"{plasticCmdQuery.CreateWorkspace} {projectName} \"{projectLocation}\" {projectName}@{fullServerName}", projectLocation);
             RunCmdWithOutput(plasticCmdQuery.AddFiles, projectLocation);
             if (unityVersion == Versions[0])

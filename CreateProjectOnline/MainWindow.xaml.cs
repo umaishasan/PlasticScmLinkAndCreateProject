@@ -26,7 +26,6 @@ namespace CreateProjectOnline
             PlasticVersion.Content = "Using PlasticSCM version: " + _controller.PlasticVersion();
             _controller.IsPlasticLogedIn();
             SelectOrganizationDdItem.Content = _controller.GetOrganization();
-            _controller.LoadDownloadedWorkspace();
             CheckDebugMode();
         }
 
