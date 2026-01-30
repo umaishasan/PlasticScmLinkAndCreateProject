@@ -1,4 +1,6 @@
-﻿namespace CreateProjectOnline
+﻿using System.DirectoryServices.ActiveDirectory;
+
+namespace CreateProjectOnline
 {
     class PlasticCmdQuery
     {
@@ -17,6 +19,7 @@
         private string checkinAllChanges = "cm checkin -m \"Get work from changeset # \"";
         private string plasticVersion = "cm version";
         private string plasticLogin = "cm whoami";
+        private string allBranches = "cm find changeset --format=\"{branch}\"";
 
 
         public string DownloadWorkSpace
@@ -79,12 +82,22 @@
         {
             get => plasticLogin;
         }
+        public string AllBranches
+        {
+            get => allBranches;
+        }
 
         public string FindChangesetsOfBranch(string branchName)
         {
             string ids = "\"{changesetid}\"";
             string findChangesetCmd = $"cm find changeset \"where branch='{branchName}'\" --format={ids}";
             return findChangesetCmd;
+        }
+        public string FindBranchOfSpecificChangeset(int changesetId, string branchName)
+        {
+            string br = "\"{branch}\"";
+            string findBranchCmd = $"cm find changeset \"where changesetid={changesetId}\" --format={br}";
+            return findBranchCmd;
         }
         public string SwitchToBranch(string branchName)
         {

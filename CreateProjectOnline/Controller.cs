@@ -19,6 +19,7 @@ namespace CreateProjectOnline
         private string templateProjectPath;
         private string templateProjectPathDirective;
         private string templateProjectChangeset;
+        private string templateProjectbranch;
 
         private bool isUndoChangeset = false;
         private bool isUndoRestriction = false;
@@ -125,6 +126,8 @@ namespace CreateProjectOnline
             IsContentWorkflowEditorOpen();
             
             if (istemplateProjectDownloaded && !isEditorOpen)
+            CheckContentWorkflowChangeset();
+            GetCurrentBranches();
             {
                 progress.Report(10);
                 comment = "Createing folder for new project.";
@@ -196,6 +199,90 @@ namespace CreateProjectOnline
             }
             GetMainChangeset();
             GetSixChangeset();
+            //GetMainChangeset();
+            //GetSixChangeset();
+        }
+
+        private void CheckContentWorkflowChangeset()
+        {
+            RunCmd($"cd \"{templateProjectPath}\"");
+            var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
+            var outputSplited = output.Split("@");
+            DebugPopup("Checking current changeset number of the project.", "Checking Changeset", MessageBoxImage.Information);
+            ///unity 2022
+            if (unityVersion == Versions[0])
+            {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand main latest changeset 
+                int templateProjectMainLatest = 0;
+                if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
+                {
+                    Debug.WriteLine("Already in main branch's latest changeset : " + output);
+                    templateProjectMainLatest = mainChangesets.LastOrDefault();
+                    templateProjectChangeset = templateProjectMainLatest.ToString();
+                    DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
+                    return;
+                }
+                ///when you stand main's previous changeset or another changeset
+                else
+                {
+                    ///when you stand 6's latest changeset
+                    int templateProjectCurrentChangeset = 0;
+                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
+                    {
+                        templateProjectCurrentChangeset = sixChangesets.LastOrDefault();
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                }
+            }
+            ///unity 06
+            else if (unityVersion == Versions[1])
+            {
+                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
+                ///when you stand 6 latest changeset
+                int templateProjectSixLatest = 0;
+                if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
+                {
+                    Debug.WriteLine("Already in 6 latest branch: " + output);
+                    templateProjectSixLatest = sixChangesets.LastOrDefault();
+                    templateProjectChangeset = templateProjectSixLatest.ToString();
+                    DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
+                    return;
+                }
+                ///when you stand 6's previous changeset or another changeset
+                else
+                {
+                    ///when you stand main's latest changeset
+                    int templateProjectCurrentChangeset = 0;
+                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
+                    {
+                        templateProjectCurrentChangeset = mainChangesets.LastOrDefault();
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                    ///when you stand another changeset
+                    else
+                    {
+                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
+                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
+                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
+                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
+                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
+                    }
+                }
+            }
         }
 
         private void CreateFolderForNewProject()
@@ -241,97 +328,105 @@ namespace CreateProjectOnline
             var lastOutput = outputSplited.FirstOrDefault().Split(':');
             var getHead = outputSplited.LastOrDefault().Split('(').LastOrDefault().Split('-').FirstOrDefault().Split(':');
             DebugPopup("Undoing changeset if there are pending changes.", "Undo Changeset", MessageBoxImage.Information);
-            ///Unity 2022
-            if (unityVersion == Versions[0])
+            try
             {
-                var whenStringComeForMain = lastOutput[0] == plasticCmdQuery.UnityUpgradeBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
-                int resultOutput = whenStringComeForMain;
-                Debug.WriteLine("Unity version: " + unityVersion);
-                ///check current changeset and main latest changeset not equal then undo
-                if (isTherePendingChanges)
+                ///Unity 2022
+                if (unityVersion == Versions[0])
                 {
-                    var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
-                    isUndoChangeset = (result == MessageBoxResult.Yes);
-                    if (isUndoChangeset)
+                    var whenStringComeForMain = lastOutput[0] == plasticCmdQuery.UnityUpgradeBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
+                    int resultOutput = whenStringComeForMain;
+                    Debug.WriteLine("Unity version: " + unityVersion);
+                    ///check current changeset and main latest changeset not equal then undo
+                    if (isTherePendingChanges)
                     {
-                        UndoWork();
-                    }
-                    else
-                    {
-                        foreach (var item in sixChangesets)
+                        var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                        isUndoChangeset = (result == MessageBoxResult.Yes);
+                        if (isUndoChangeset)
                         {
-                            Debug.WriteLine($"changesets count: {sixChangesets.Count}");
-                            //Debug.WriteLine($"changesets: {item}");
-                            if (item == resultOutput)
+                            UndoWork();
+                        }
+                        else
+                        {
+                            foreach (var item in sixChangesets)
                             {
-                                var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity6 to Unity2022 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
-                                isUndoChangeset = (result2 == MessageBoxResult.Yes);
-                                if (isUndoChangeset)
+                                Debug.WriteLine($"changesets count: {sixChangesets.Count}");
+                                //Debug.WriteLine($"changesets: {item}");
+                                if (item == resultOutput)
                                 {
-                                    UndoWork();
+                                    var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity6 to Unity2022 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                                    isUndoChangeset = (result2 == MessageBoxResult.Yes);
+                                    if (isUndoChangeset)
+                                    {
+                                        UndoWork();
+                                    }
+                                    else
+                                    {
+                                        isUndoRestriction = true;
+                                    }
                                 }
                                 else
                                 {
-                                    isUndoRestriction = true;
+                                    Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
                                 }
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
                             }
                         }
                     }
+                    else
+                    {
+                        DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
+                    }
                 }
-                else
+                ///Unity 06
+                else if (unityVersion == Versions[1])
                 {
-                    DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
+                    var whenStringComeFor6 = lastOutput[0] == plasticCmdQuery.MainBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
+                    int resultOutput = whenStringComeFor6;
+                    Debug.WriteLine("Unity version: " + unityVersion);
+                    ///undo all changes
+                    if (isTherePendingChanges)
+                    {
+                        DebugPopup("Undoing changeset if there are pending changes.", "Undo Changeset", MessageBoxImage.Information);
+                        var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                        isUndoChangeset = (result == MessageBoxResult.Yes);
+                        if (isUndoChangeset)
+                        {
+                            UndoWork();
+                        }
+                        else
+                        {
+                            foreach (var item in mainChangesets)
+                            {
+                                Debug.WriteLine($"changesets count: {mainChangesets.Count}");
+                                //Debug.WriteLine($"changesets: {item}");
+                                if (item == resultOutput)
+                                {
+                                    var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity2022 to Unity6 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
+                                    isUndoChangeset = (result2 == MessageBoxResult.Yes);
+                                    if (isUndoChangeset)
+                                    {
+                                        UndoWork();
+                                    }
+                                    else
+                                    {
+                                        isUndoRestriction = true;
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
+                    }
                 }
             }
-            ///Unity 06
-            else if (unityVersion == Versions[1])
+            catch (Exception ex)
             {
-                var whenStringComeFor6 = lastOutput[0] == plasticCmdQuery.MainBranch ? int.Parse(getHead[1]) : int.Parse(lastOutput[1]);
-                int resultOutput = whenStringComeFor6;
-                Debug.WriteLine("Unity version: " + unityVersion);
-                ///undo all changes
-                if (isTherePendingChanges)
-                {
-                    var result = DebugPopup("Do you want to undo all the work?", "Undo Changeset", MessageBoxImage.Warning, MessageBoxButton.YesNo);
-                    isUndoChangeset = (result == MessageBoxResult.Yes);
-                    if (isUndoChangeset)
-                    {
-                        UndoWork();
-                    }
-                    else
-                    {
-                        foreach (var item in mainChangesets)
-                        {
-                            Debug.WriteLine($"changesets count: {mainChangesets.Count}");
-                            //Debug.WriteLine($"changesets: {item}");
-                            if (item == resultOutput)
-                            {
-                                var result2 = DebugPopup("You need to undo this changeset because it cannot be converted from Unity2022 to Unity6 without undo.", "Undo Restriction", MessageBoxImage.Warning, MessageBoxButton.YesNo);
-                                isUndoChangeset = (result2 == MessageBoxResult.Yes);
-                                if (isUndoChangeset)
-                                {
-                                    UndoWork();
-                                }
-                                else
-                                {
-                                    isUndoRestriction = true;
-                                }
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"Main latest: {templateProjectChangeset} => Already in main's latest.");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    DebugPopup("No pending changes to undo.", "Pending Changes Available", MessageBoxImage.Information);
-                }
+                DebugPopup("" + ex.Message, "Unknown Error!", MessageBoxImage.Error);
             }
         }
 
@@ -428,87 +523,7 @@ namespace CreateProjectOnline
             }
         }
 
-        private void CheckContentWorkflowChangeset()
-        {
-            RunCmd($"cd \"{templateProjectPath}\"");
-            var output = RunCmdWithOutput(plasticCmdQuery.Status, templateProjectPath);
-            var outputSplited = output.Split("@");
-            DebugPopup("Checking current changeset number of the project.", "Checking Changeset", MessageBoxImage.Information);
-            ///unity 2022
-            if (unityVersion == Versions[0])
-            {
-                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
-                ///when you stand main latest changeset 
-                int templateProjectMainLatest = 0;
-                if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
-                {
-                    Debug.WriteLine("Already in main branch's latest changeset : " + output);
-                    templateProjectMainLatest = mainChangesets.LastOrDefault();
-                    templateProjectChangeset = templateProjectMainLatest.ToString();
-                    DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
-                    return;
-                }
-                ///when you stand main's previous changeset or another changeset
-                else
-                {
-                    ///when you stand 6's latest changeset
-                    int templateProjectCurrentChangeset = 0;
-                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
-                    {
-                        templateProjectCurrentChangeset = sixChangesets.LastOrDefault();
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                    ///when you stand another changeset
-                    else
-                    {
-                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                }
-            }
-            ///unity 06
-            else if (unityVersion == Versions[1])
-            {
-                //Debug.WriteLine($"Unity version: {unityVersion}, and ChangesetNo. {outputSplited.FirstOrDefault()}");
-                ///when you stand 6 latest changeset
-                int templateProjectSixLatest = 0;
-                if (outputSplited.FirstOrDefault() == plasticCmdQuery.UnityUpgradeBranch)
-                {
-                    Debug.WriteLine("Already in 6 latest branch: " + output);
-                    templateProjectSixLatest = sixChangesets.LastOrDefault();
-                    templateProjectChangeset = templateProjectSixLatest.ToString();
-                    DebugPopup("Already in 6's latest changeset.", "Unity6 Branch", MessageBoxImage.Information);
-                    return;
-                }
-                ///when you stand 6's previous changeset or another changeset
-                else
-                {
-                    ///when you stand main's latest changeset
-                    int templateProjectCurrentChangeset = 0;
-                    if (outputSplited.FirstOrDefault() == plasticCmdQuery.MainBranch)
-                    {
-                        templateProjectCurrentChangeset = mainChangesets.LastOrDefault();
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        DebugPopup("Already in main's latest changeset.", "Main Branch", MessageBoxImage.Information);
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                    ///when you stand another changeset
-                    else
-                    {
-                        var lastOutput = outputSplited.FirstOrDefault().Split(':');
-                        templateProjectCurrentChangeset = int.Parse(lastOutput[1]);
-                        templateProjectChangeset = templateProjectCurrentChangeset.ToString();
-                        DebugPopup($"Current changeset: {templateProjectCurrentChangeset}", "Another Branch", MessageBoxImage.Information);
-                        Debug.WriteLine("Get the number: " + templateProjectCurrentChangeset);
-                    }
-                }
-            }
-        }
+        
 
         private void CreateNewRepository()
         {
@@ -663,6 +678,11 @@ namespace CreateProjectOnline
             }
         } 
 
+        private void CheckCurrentBranch()
+        {
+            RunCmd($"cd \"{templateProjectPath}\"");
+        }
+
         #endregion
 
         #region CommonMethod
@@ -728,6 +748,38 @@ namespace CreateProjectOnline
                 }
             }
             DebugPopup("Getting changesets from unity 6 branch", "Getting Changesets", MessageBoxImage.Information);
+        }
+
+        public void GetCurrentBranches()
+        {
+            if(unityVersion == Versions[0])
+            {
+                var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.MainBranch), templateProjectPath);
+                Debug.WriteLine("branches specific changeset branch: " + output);
+                if(output == plasticCmdQuery.MainBranch)
+                {
+                    GetMainChangeset();
+                }
+                else
+                {
+                    GetMainChangeset();
+                    GetSixChangeset();
+                }
+            }
+            else if (unityVersion == Versions[1])
+            {
+                var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.UnityUpgradeBranch), templateProjectPath);
+                Debug.WriteLine("branches specific changeset: " + output);
+                if (output == plasticCmdQuery.UnityUpgradeBranch)
+                {
+                    GetSixChangeset();
+                }
+                else
+                {
+                    GetMainChangeset();
+                    GetSixChangeset();
+                }
+            }
         }
 
         public void GetAllRepo()
