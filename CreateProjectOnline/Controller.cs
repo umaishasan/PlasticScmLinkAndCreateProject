@@ -124,10 +124,11 @@ namespace CreateProjectOnline
             comment = $"Check {templateProjectName} project downloaded or not.";
             CheckContentWorkflowDownloaded();
             IsContentWorkflowEditorOpen();
-            
-            if (istemplateProjectDownloaded && !isEditorOpen)
+            progress.Report(5);
+            comment = $"Check {templateProjectName} current changeset number.";
             CheckContentWorkflowChangeset();
             GetCurrentBranches();
+            if (istemplateProjectDownloaded && !isEditorOpen)
             {
                 progress.Report(10);
                 comment = "Createing folder for new project.";
@@ -141,9 +142,6 @@ namespace CreateProjectOnline
                 progress.Report(10); //50
                 comment = unityVersion == Versions[0] ? "Switch to main's latest changeset." : "Switch to Unity6's latest changeset.";
                 SwitchToMainChangeset();
-                progress.Report(5);
-                comment = $"Check {templateProjectName} current changeset number.";
-                CheckContentWorkflowChangeset();
                 progress.Report(5);
                 comment = "Create new repository for the new project.";
                 CreateNewRepository();
@@ -197,10 +195,6 @@ namespace CreateProjectOnline
                     return;
                 }
             }
-            GetMainChangeset();
-            GetSixChangeset();
-            //GetMainChangeset();
-            //GetSixChangeset();
         }
 
         private void CheckContentWorkflowChangeset()
@@ -499,8 +493,9 @@ namespace CreateProjectOnline
                 else if(isTherePendingChanges == true && isUndoChangeset == false)
                 {
                     DebugPopup("Cannot switch due to pending changes not undone.", "Switch Changeset", MessageBoxImage.Information);
-                    return;
+                    //return;
                 }
+                CheckContentWorkflowChangeset();
             }
             else if (unityVersion == Versions[1])
             {
@@ -518,12 +513,11 @@ namespace CreateProjectOnline
                 else if (isTherePendingChanges == true && isUndoChangeset == false)
                 {
                     DebugPopup("Cannot switch due to pending changes not undone.", "Switch Changeset", MessageBoxImage.Information);
-                    return;
+                    //return;
                 }
+                CheckContentWorkflowChangeset();
             }
         }
-
-        
 
         private void CreateNewRepository()
         {
@@ -678,11 +672,6 @@ namespace CreateProjectOnline
             }
         } 
 
-        private void CheckCurrentBranch()
-        {
-            RunCmd($"cd \"{templateProjectPath}\"");
-        }
-
         #endregion
 
         #region CommonMethod
@@ -755,29 +744,46 @@ namespace CreateProjectOnline
             if(unityVersion == Versions[0])
             {
                 var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.MainBranch), templateProjectPath);
-                Debug.WriteLine("branches specific changeset branch: " + output);
-                if(output == plasticCmdQuery.MainBranch)
+                //Debug.WriteLine("branches specific changeset branch: " + output);
+                foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    GetMainChangeset();
+                    //Debug.WriteLine("branches specific changeset line: " + line);
+                    if (line == plasticCmdQuery.MainBranch)
+                    {
+                        Debug.WriteLine("Just main branch changeset load");
+                        GetMainChangeset();
+                        break;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("both branch changeset load");
+                        GetMainChangeset();
+                        GetSixChangeset();
+                        break;
+                    }
                 }
-                else
-                {
-                    GetMainChangeset();
-                    GetSixChangeset();
-                }
+
             }
             else if (unityVersion == Versions[1])
             {
                 var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.UnityUpgradeBranch), templateProjectPath);
                 Debug.WriteLine("branches specific changeset: " + output);
-                if (output == plasticCmdQuery.UnityUpgradeBranch)
+                foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    GetSixChangeset();
-                }
-                else
-                {
-                    GetMainChangeset();
-                    GetSixChangeset();
+                    Debug.WriteLine("branches specific changeset line: " + line);
+                    if (line == plasticCmdQuery.UnityUpgradeBranch)
+                    {
+                        Debug.WriteLine("Just 6 branch changeset load");
+                        GetSixChangeset();
+                        break;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("both branch changeset load");
+                        GetMainChangeset();
+                        GetSixChangeset();
+                        break;
+                    }
                 }
             }
         }
