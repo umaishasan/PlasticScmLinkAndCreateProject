@@ -8,7 +8,7 @@ namespace CreateProjectOnline
         private string mainBranch = "/main";
         private string unityUpgradeBranch = "/main/UH-UnityUpgrade";
         private string repositoryList = "cm repo list --server=";
-        private string statusHeader = "cm status --header";
+        private string statusHeader = "cm status --cset";
         private string statusShort = "cm status --short";
         private string undoAllChanges = "cm undo . -r";
         private string refreshChanges = "cm status --refresh";

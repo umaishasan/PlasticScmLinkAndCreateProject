@@ -2,7 +2,6 @@
 using System.IO;
 using System.Windows;
 using System.Management;
-using System;
 
 namespace CreateProjectOnline
 {
@@ -27,6 +26,7 @@ namespace CreateProjectOnline
         private bool isTherePendingChanges = false;
         private bool isEditorOpen = false;
         private bool isErrorBool = true;
+        private bool isPlasticLatestVersion = false;
 
         public string[] Versions = { " Unity 2022", " Unity 06" };
         public List<string> downloadedWorkspaces = new List<string>();
@@ -111,6 +111,14 @@ namespace CreateProjectOnline
             set
             {
                 isUndoRestriction = value;
+            }
+        }
+        public bool PlasticVesion
+        {
+            get => isPlasticLatestVersion;
+            set
+            {
+                isPlasticLatestVersion = value;
             }
         }
 
@@ -582,7 +590,7 @@ namespace CreateProjectOnline
             }
             else if (unityVersion == Versions[1])
             {
-                DebugPopup("Checkin from main latest changeset.", "Checkin", MessageBoxImage.Information);
+                DebugPopup("Checkin from 6 latest changeset.", "Checkin", MessageBoxImage.Information);
                 RunCmdWithOutput($"{plasticCmdQuery.PushChanges}{templateProjectChangeset}", projectLocation);
                 Debug.WriteLine("Checkin from 6 latest changeset.");
             }
@@ -591,7 +599,19 @@ namespace CreateProjectOnline
         public string PlasticVersion()
         {
             var output = RunCmdOut(plasticCmdQuery.PlasticVersion);
-            Debug.WriteLine(output);
+            string[] outputSplited = output.Split('.');
+            int version = int.Parse(outputSplited.FirstOrDefault());
+            if(version >= 2021)
+            {
+                var result = DebugPopup("Sorry! You are using plastic latest vesion", "Plastic Version", MessageBoxImage.Warning);
+                isPlasticLatestVersion = (result == MessageBoxResult.OK);
+            }
+            else
+            {
+                isPlasticLatestVersion = false;
+                Debug.WriteLine("Which plastic version is using? "+output);
+            }
+
             return output;
         }
 
@@ -745,41 +765,46 @@ namespace CreateProjectOnline
             {
                 var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.MainBranch), templateProjectPath);
                 //Debug.WriteLine("branches specific changeset branch: " + output);
+                DebugPopup($"Select version {unityVersion} & branch will ba {output}", "Getting Changesets", MessageBoxImage.Information);
                 foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     //Debug.WriteLine("branches specific changeset line: " + line);
                     if (line == plasticCmdQuery.MainBranch)
                     {
                         Debug.WriteLine("Just main branch changeset load");
+                        DebugPopup("Just main branch changeset load", "Getting Changesets", MessageBoxImage.Information);
                         GetMainChangeset();
                         break;
                     }
                     else
                     {
                         Debug.WriteLine("both branch changeset load");
+                        DebugPopup("Both branches changeset load", "Getting Changesets", MessageBoxImage.Information);
                         GetMainChangeset();
                         GetSixChangeset();
                         break;
                     }
                 }
-
             }
             else if (unityVersion == Versions[1])
             {
                 var output = RunCmdWithOutput(plasticCmdQuery.FindBranchOfSpecificChangeset(int.Parse(templateProjectChangeset), plasticCmdQuery.UnityUpgradeBranch), templateProjectPath);
-                Debug.WriteLine("branches specific changeset: " + output);
+                //Debug.WriteLine("branches specific changeset branch: " + output);
+                DebugPopup($"Select version {unityVersion} & branch will be {output}", "Getting Changesets", MessageBoxImage.Information);
                 foreach (var line in output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    Debug.WriteLine("branches specific changeset line: " + line);
+                    //Debug.WriteLine("branches specific changeset line: " + line);
                     if (line == plasticCmdQuery.UnityUpgradeBranch)
                     {
                         Debug.WriteLine("Just 6 branch changeset load");
+                        DebugPopup("Just unity 6 branch changeset load", "Getting Changesets", MessageBoxImage.Information);
                         GetSixChangeset();
                         break;
                     }
                     else
                     {
                         Debug.WriteLine("both branch changeset load");
+                        DebugPopup("Both branches changeset load", "Getting Changesets", MessageBoxImage.Information);
                         GetMainChangeset();
                         GetSixChangeset();
                         break;
@@ -819,7 +844,7 @@ namespace CreateProjectOnline
             }
             else
             {
-                if (isUndoRestriction && istemplateProjectDownloaded)
+                if (isUndoRestriction && istemplateProjectDownloaded || isPlasticLatestVersion)
                 {
                     complete = "Operation Failed!";
                 }

@@ -10,11 +10,19 @@
         Width="626"
         ResizeMode="NoResize">
     <Grid HorizontalAlignment="Center" Width="626" Height="374" VerticalAlignment="Top">
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="Black"/>
+                <GradientStop Color="#FF6E7D86" Offset="0.594"/>
+                <GradientStop Color="#FF252523" Offset="1"/>
+                <GradientStop Color="#FFF6F9FB" Offset="0"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0*"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="CreateButton" Content="Create" HorizontalAlignment="Center" Margin="0,233,0,0" VerticalAlignment="Top" Width="198" Click="CreateProject" Grid.Column="1" RenderTransformOrigin="0.505,0.152" IsEnabled="False"/>
+        <Button x:Name="CreateButton" Content="Create" HorizontalAlignment="Center" Margin="0,233,0,0" VerticalAlignment="Top" Width="198" Click="CreateProject" Grid.Column="1" RenderTransformOrigin="0.505,0.152" IsEnabled="False" Background="#FFB6D694" BorderBrush="Black"/>
         <Label Content="Plastic Organization" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="131,60,0,0" VerticalAlignment="Top" Height="31" FontWeight="Bold"/>
         <ComboBox x:Name="SelectOrganizationDd" Grid.ColumnSpan="2" HorizontalAlignment="Left"  Margin="267,60,0,0" VerticalAlignment="Top" Width="168" SelectionChanged="ComboBox_OrganizationSelection">
             <ComboBoxItem x:Name="SelectOrganizationDdItem" Content=""/>
@@ -23,10 +31,10 @@
         <TextBox Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="269,139,0,0" VerticalAlignment="Top" Width="120" TextChanged="ProjectNameChanged"/>
         <Label Content="Project Location" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="132,0,0,0" VerticalAlignment="Center" FontWeight="Bold"/>
         <TextBox x:Name="ProjectLocationTxt" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="270,0,0,0" VerticalAlignment="Center" Width="120" IsEnabled="False" IsTabStop="False" Text="" TextChanged="ProjectLocationTxt_TextChanged"/>
-        <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="420,175,0,0" VerticalAlignment="Top" Width="67" Click="BrowseButton_Click"/>
+        <Button Content="Browse" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="420,175,0,0" VerticalAlignment="Top" Width="67" Click="BrowseButton_Click" Background="#FFE4E4E4" BorderBrush="Black"/>
         <ProgressBar x:Name="OperationProgressBar" Grid.ColumnSpan="2" Margin="139,296,125,0" Foreground="Green" Visibility="Collapsed" IsIndeterminate="False" Minimum="0" Maximum="100" Value="0" Height="20" VerticalAlignment="Top"/>
-        <Label x:Name="ProgressBarComment" Content="" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="138,316,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
-        <Label x:Name="ProgressBarComment2" Content="" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="139,268,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10"/>
+        <Label x:Name="ProgressBarComment" Content="Content" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="138,316,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10" Foreground="White"/>
+        <Label x:Name="ProgressBarComment2" Content="Content" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="139,268,0,0" Visibility="Collapsed" VerticalAlignment="Top" FontSize="10" Foreground="White"/>
         <Label x:Name="PlasticVersion" Content="Content" HorizontalAlignment="Center" Visibility="Visible" VerticalAlignment="Top" FontSize="10" Grid.Column="1"/>
         <Label x:Name="ProjectNameValidate" Content="" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="394,135,0,0" VerticalAlignment="Top" Foreground="Red"/>
         <ComboBox x:Name="SelectVersionDd" Grid.ColumnSpan="2" HorizontalAlignment="Left"  Margin="269,99,0,0" VerticalAlignment="Top" Width="168" SelectionChanged="ComboBox_SelectionVersion">

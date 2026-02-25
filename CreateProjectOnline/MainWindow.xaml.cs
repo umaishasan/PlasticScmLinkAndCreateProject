@@ -200,7 +200,7 @@ namespace CreateProjectOnline
 
         private void ProgressColorValidate()
         {
-            if (!_controller.IsProjectDownloaded || _controller.AlreadyEditorOpen || _controller.UndoRestriction)
+            if (!_controller.IsProjectDownloaded || _controller.AlreadyEditorOpen || _controller.UndoRestriction || _controller.PlasticVesion)
             {
                 OperationProgressBar.Foreground = new SolidColorBrush(Colors.Red);
             }
